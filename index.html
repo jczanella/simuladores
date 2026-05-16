@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Simulador +Inovação</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+body{font-family:Arial;padding:15px;background:#f5f7fa;}
+.linha{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+input,select{padding:8px;width:160px;}
+button{padding:10px;background:#1b3c6b;color:#fff;border:none;margin-right:5px;}
+
+table{width:100%;border-collapse:collapse;background:#fff;}
+th,td{border:1px solid #ccc;padding:6px;text-align:right;color:#000;}
+th{background:#1b3c6b;color:#fff;}
+
+.valor{font-weight:bold;}
+</style>
+</head>
+
+<body>
+
+<h2>Simulador +Inovação</h2>
+
+<div class="linha">
+Valor: <input id="valor">
+</div>
+
+<div class="linha">
+Entrada %: <input id="percEntrada">
+Entrada R$: <input id="valorEntrada">
+</div>
+
+<div class="linha">
+Prazo:
+<select id="prazo">
+<option>6</option><option>12</option><option>24</option>
+<option>36</option><option>48</option>
+<option selected>60</option>
+</select>
+</div>
+
+<div class="linha">
+Taxa:
+<input id="taxaMes"> a.m.
+<input id="taxaAno"> a.a.
+</div>
+
+<button onclick="simular()">Simular</button>
+<button onclick="gerarPDF()">Gerar PDF</button>
+
+<div id="resultado"></div>
+
+<script>
+
+// ===== UTIL =====
+function parseBR(v){
+  return Number(v.replace(/\./g,"").replace(",",".")||0);
+}
+
+function format2(v){
+  return Number(v).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+// ===== MASCARA ESTÁVEL =====
+function mask(el){
+  el.addEventListener("input",()=>{
+    let raw=el.value.replace(/\D/g,"");
+    if(!raw){el.value="";return;}
+    let num=Number(raw);
+    el.value=num.toLocaleString("pt-BR");
+  });
+}
+
+// ===== TAXAS =====
+function aaParaAm(aa){return Math.pow(1+aa,1/12)-1;}
+function amParaAa(am){return Math.pow(1+am,12)-1;}
+
+let taxaMensalReal=aaParaAm(0.126);
+let taxaAnualReal=0.126;
+
+// ===== INIT =====
+window.onload=function(){
+
+mask(valor);
+mask(valorEntrada);
+
+taxaMes.value=format2(taxaMensalReal*100);
+taxaAno.value=format2(taxaAnualReal*100);
+
+percEntrada.oninput=()=>{
+let v=parseBR(valor.value);
+let p=parseFloat(percEntrada.value);
+if(!v||isNaN(p))return;
+valorEntrada.value=format2(v*p/100);
+};
+
+valorEntrada.oninput=()=>{
+let v=parseBR(valor.value);
+let e=parseBR(valorEntrada.value);
+if(!v||!e)return;
+percEntrada.value=Math.round(e/v*100);
+};
+
+taxaMes.oninput=()=>{
+taxaMensalReal=parseBR(taxaMes.value)/100;
+taxaAnualReal=amParaAa(taxaMensalReal);
+taxaAno.value=format2(taxaAnualReal*100);
+};
+
+taxaAno.oninput=()=>{
+taxaAnualReal=parseBR(taxaAno.value)/100;
+taxaMensalReal=aaParaAm(taxaAnualReal);
+taxaMes.value=format2(taxaMensalReal*100);
+};
+
+taxaMes.onfocus=()=>taxaMes.value=taxaMensalReal.toFixed(6).replace(".",",");
+taxaAno.onfocus=()=>taxaAno.value=taxaAnualReal.toFixed(6).replace(".",",");
+};
+
+// ===== SIMULAÇÃO =====
+let tabela=[];
+
+function simular(){
+
+let valorV=parseBR(valor.value);
+let perc=Math.round(parseFloat(percEntrada.value||0));
+
+let entrada=valorV*perc/100;
+
+valorEntrada.value=format2(entrada);
+percEntrada.value=perc;
+
+let prazoV=parseInt(prazo.value);
+
+let saldo=valorV-entrada;
+let parcelas=prazoV-3;
+let amort=saldo/parcelas;
+
+let html=`<table>
+<tr><th>Parcela</th><th>Data</th><th>Saldo</th><th>Amortização</th><th>Juros</th><th>Valor</th></tr>`;
+
+tabela=[];
+
+let dataBase=new Date();
+let data0=new Date(dataBase);
+data0.setMonth(data0.getMonth()+3);
+data0.setDate(15);
+
+// PARCELA 0
+let dias0=(data0-dataBase)/86400000;
+let j0=saldo*(Math.pow(1+taxaMensalReal,dias0/30)-1);
+
+html+=`<tr>
+<td>0</td>
+<td>${data0.toLocaleDateString("pt-BR")}</td>
+<td>${format2(saldo)}</td>
+<td>0,00</td>
+<td>${format2(j0)}</td>
+<td class="valor">${format2(j0)}</td>
+</tr>`;
+
+tabela.push([0,data0.toLocaleDateString("pt-BR"),saldo,0,j0,j0]);
+
+let anterior=data0;
+
+// PARCELAS
+for(let i=1;i<=parcelas;i++){
+
+let d=new Date(data0);
+d.setMonth(d.getMonth()+i);
+
+let dias=(d-anterior)/86400000;
+
+let juros=saldo*(Math.pow(1+taxaMensalReal,dias/30)-1);
+let parcela=juros+amort;
+
+html+=`<tr>
+<td>${i}</td>
+<td>${d.toLocaleDateString("pt-BR")}</td>
+<td>${format2(saldo)}</td>
+<td>${format2(amort)}</td>
+<td>${format2(juros)}</td>
+<td class="valor">${format2(parcela)}</td>
+</tr>`;
+
+tabela.push([i,d.toLocaleDateString("pt-BR"),saldo,amort,juros,parcela]);
+
+saldo-=amort;
+anterior=d;
+}
+
+html+="</table>";
+resultado.innerHTML=html;
+
+}
+
+// ===== PDF =====
+function gerarPDF(){
+
+if(!tabela.length){
+alert("Faça a simulação primeiro");
+return;
+}
+
+const { jsPDF } = window.jspdf;
+let doc=new jsPDF();
+
+let now=new Date();
+let hora=now.toTimeString().slice(0,5);
+
+doc.setFontSize(11);
+
+doc.text(`Simulação +Inovação | ${now.toLocaleDateString("pt-BR")} ${hora}`,10,10);
+
+doc.text(`Valor: ${format2(parseBR(valor.value))} | Entrada: ${percEntrada.value}% (${format2(parseBR(valorEntrada.value))}) | Prazo: ${prazo.value} meses`,10,18);
+
+doc.autoTable({
+startY:25,
+head:[["Parcela","Data","Saldo","Amortização","Juros","Valor"]],
+body:tabela.map(r=>[r[0],r[1],format2(r[2]),format2(r[3]),format2(r[4]),format2(r[5])]),
+styles:{textColor:[0,0,0]}
+});
+
+let y=doc.lastAutoTable.finalY+6;
+
+doc.text("Importante:",10,y); y+=5;
+
+let texto = "a) Simulação não inclui a tarifa de abertura de crédito. b) O fluxo apresenta valores aproximados, que poderão variar conforme normas do BNDES. Os valores não são vinculativos. c) Simulação sujeita à aprovação de crédito CNHI Capital. d) A TFB sofre variação conforme BNDES.";
+
+let linhas = doc.splitTextToSize(texto,180);
+
+doc.text(linhas,10,y);
+
+doc.save("Simulacao.pdf");
+
+}
+
+</script>
+
+</body>
+</html>
