@@ -152,6 +152,49 @@ a.card:active{
   padding:18px 0 4px;
   font-style:italic;
 }
+
+/* ── BANNER INSTALAR ── */
+.install-banner{
+  background:var(--blue);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 20px;
+  flex-wrap:wrap;
+}
+.install-banner p{
+  font-size:.82rem;
+  opacity:.9;
+  line-height:1.4;
+}
+.install-banner p strong{
+  display:block;
+  font-size:.92rem;
+  opacity:1;
+  margin-bottom:2px;
+}
+#btn-instalar{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:9px 18px;
+  background:#fff;
+  color:var(--blue);
+  border:none;
+  border-radius:8px;
+  font-family:inherit;
+  font-size:.85rem;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+  flex-shrink:0;
+  transition:opacity .15s;
+}
+#btn-instalar:hover{opacity:.9;}
+#btn-instalar svg{width:16px;height:16px;fill:var(--blue);}
+#install-banner{display:none;}
 </style>
 </head>
 <body>
@@ -160,6 +203,18 @@ a.card:active{
   <h1>Central de Simuladores</h1>
   <p>Financiamentos e Crédito</p>
 </header>
+
+<!-- Banner de instalação — aparece só quando o browser permite instalar -->
+<div id="install-banner" class="install-banner">
+  <p>
+    <strong>Instalar o aplicativo</strong>
+    Acesse os simuladores offline, direto da tela inicial
+  </p>
+  <button id="btn-instalar">
+    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5v-2z"/></svg>
+    Instalar
+  </button>
+</div>
 
 <main>
 
@@ -201,11 +256,36 @@ a.card:active{
 </main>
 
 <script>
+// ── Service Worker ──
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('/simuladores/sw.js');
   });
 }
+
+// ── Botão de instalação PWA ──
+let installEvent = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  installEvent = e;
+  document.getElementById('install-banner').style.display = 'flex';
+});
+
+document.getElementById('btn-instalar').addEventListener('click', async () => {
+  if(!installEvent) return;
+  installEvent.prompt();
+  const { outcome } = await installEvent.userChoice;
+  if(outcome === 'accepted'){
+    document.getElementById('install-banner').style.display = 'none';
+  }
+  installEvent = null;
+});
+
+// Esconde o banner se o app já estiver instalado
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').style.display = 'none';
+});
 </script>
 </body>
 </html>
