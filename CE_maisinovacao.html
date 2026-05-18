@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Simulador +Inovação</title>
+<title>Simulador +Inovação — Linha CE</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -318,8 +318,10 @@ window.onload=function(){
   taxaAno.value=format2(taxaAnualReal*100);
 
   percEntrada.oninput=()=>{
-    let v=parseBR(valor.value);
+    // limitar a 100%
     let p=parseFloat(percEntrada.value);
+    if(p>100){percEntrada.value=100;p=100;}
+    let v=parseBR(valor.value);
     if(!v||isNaN(p))return;
     valorEntrada.value=format2(v*p/100);
   };
@@ -327,7 +329,9 @@ window.onload=function(){
     let v=parseBR(valor.value);
     let e=parseBR(valorEntrada.value);
     if(!v||!e)return;
-    percEntrada.value=Math.round(e/v*100);
+    let p=Math.min(Math.round(e/v*100),100);
+    percEntrada.value=p;
+    valorEntrada.value=format2(v*p/100);
   };
   taxaMes.oninput=()=>{
     taxaMensalReal=parseBR(taxaMes.value)/100;
@@ -339,8 +343,12 @@ window.onload=function(){
     taxaMensalReal=aaParaAm(taxaAnualReal);
     taxaMes.value=format2(taxaMensalReal*100);
   };
-  taxaMes.onfocus=()=>taxaMes.value=taxaMensalReal.toFixed(6).replace(".",",");
-  taxaAno.onfocus=()=>taxaAno.value=taxaAnualReal.toFixed(6).replace(".",",");
+  // ao entrar: mostra 6 casas decimais do percentual (ex: 0,993800)
+  taxaMes.onfocus=()=>taxaMes.value=(taxaMensalReal*100).toFixed(6).replace(".",",");
+  taxaAno.onfocus=()=>taxaAno.value=(taxaAnualReal*100).toFixed(6).replace(".",",");
+  // ao sair: volta a 2 casas decimais do percentual (ex: 0,99)
+  taxaMes.onblur=()=>taxaMes.value=format2(taxaMensalReal*100);
+  taxaAno.onblur=()=>taxaAno.value=format2(taxaAnualReal*100);
 };
 
 // ========= JUROS =========
