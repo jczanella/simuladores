@@ -200,5 +200,12 @@ a.card:active{
 
 </main>
 
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/simuladores/sw.js');
+  });
+}
+</script>
 </body>
 </html>
