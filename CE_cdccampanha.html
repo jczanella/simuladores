@@ -40,7 +40,6 @@ body{
   padding-bottom:48px;
 }
 
-/* ── HEADER ── */
 header{
   background:var(--blue);
   color:#fff;
@@ -52,10 +51,8 @@ header{
 .header-text h1{font-size:1.1rem;font-weight:700;letter-spacing:.2px;}
 .header-text p{font-size:.78rem;opacity:.72;margin-top:3px;}
 
-/* ── MAIN ── */
 main{max-width:900px;margin:0 auto;padding:28px 16px 0;}
 
-/* ── CARD ── */
 .card{
   background:var(--card);
   border-radius:var(--radius);
@@ -73,43 +70,23 @@ main{max-width:900px;margin:0 auto;padding:28px 16px 0;}
 }
 
 /* ── MODALIDADE ── */
-.modal-seg{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
+.modal-seg{display:flex;gap:10px;flex-wrap:wrap;}
 .modal-btn{
-  flex:1;
-  min-width:200px;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
+  flex:1;min-width:200px;
+  display:flex;flex-direction:column;gap:4px;
   padding:14px 18px;
   border:2px solid var(--border);
   border-radius:10px;
-  background:#fff;
-  cursor:pointer;
-  text-align:left;
-  transition:all .15s;
+  background:#fff;cursor:pointer;
+  text-align:left;transition:all .15s;
   font-family:inherit;
 }
 .modal-btn:hover{border-color:var(--blue-light);background:var(--blue-pale);}
-.modal-btn.active{
-  border-color:var(--blue);
-  background:var(--blue-pale);
-}
-.modal-btn .modal-name{
-  font-size:.95rem;
-  font-weight:700;
-  color:var(--blue);
-}
-.modal-btn .modal-desc{
-  font-size:.76rem;
-  color:var(--text-soft);
-}
-.modal-btn.active .modal-name{color:var(--blue);}
+.modal-btn.active{border-color:var(--blue);background:var(--blue-pale);}
+.modal-btn .modal-name{font-size:.95rem;font-weight:700;color:var(--blue);}
+.modal-btn .modal-desc{font-size:.76rem;color:var(--text-soft);}
 
-/* ── FORM GRID ── */
+/* ── FORM ── */
 .form-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
@@ -125,13 +102,9 @@ main{max-width:900px;margin:0 auto;padding:28px 16px 0;}
   padding:9px 11px;
   border:1.5px solid var(--border);
   border-radius:8px;
-  font-family:inherit;
-  font-size:.93rem;
-  color:var(--text);
-  background:#fff;
-  outline:none;
-  transition:border-color .15s;
-  width:100%;
+  font-family:inherit;font-size:.93rem;
+  color:var(--text);background:#fff;
+  outline:none;transition:border-color .15s;width:100%;
 }
 .field input:focus,.field select:focus{border-color:var(--blue);}
 
@@ -140,20 +113,15 @@ main{max-width:900px;margin:0 auto;padding:28px 16px 0;}
   border:1.5px solid var(--border);
   border-radius:8px;
   font-size:.93rem;
-  color:var(--blue);
-  font-weight:600;
+  color:var(--blue);font-weight:600;
   background:var(--blue-pale);
 }
 
 .erro-msg{
-  margin-top:12px;
-  padding:10px 14px;
-  background:#fff3f3;
-  border:1.5px solid #f5c6c6;
-  border-radius:8px;
-  color:#c0392b;
-  font-size:.84rem;
-  font-weight:500;
+  margin-top:12px;padding:10px 14px;
+  background:#fff3f3;border:1.5px solid #f5c6c6;
+  border-radius:8px;color:#c0392b;
+  font-size:.84rem;font-weight:500;
 }
 
 /* ── BUTTONS ── */
@@ -163,8 +131,7 @@ main{max-width:900px;margin:0 auto;padding:28px 16px 0;}
   padding:10px 20px;
   border:none;border-radius:8px;
   font-family:inherit;font-size:.88rem;font-weight:600;
-  cursor:pointer;transition:all .15s;
-  text-decoration:none;
+  cursor:pointer;transition:all .15s;text-decoration:none;
 }
 .btn-primary{background:var(--blue);color:#fff;}
 .btn-primary:hover{background:var(--blue-light);}
@@ -174,22 +141,19 @@ main{max-width:900px;margin:0 auto;padding:28px 16px 0;}
 .btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff;}
 .btn svg{width:16px;height:16px;fill:currentColor;}
 
-/* ── RESULTADO ── */
 #resultado{margin-top:4px;}
 
-/* ── CET BANNER ── */
+/* ── BANNER ── */
 .cet-banner{
-  background:var(--blue-pale);
-  border:1px solid #c3d1e8;
-  border-radius:10px;
-  padding:12px 18px;
+  background:var(--blue-pale);border:1px solid #c3d1e8;
+  border-radius:10px;padding:12px 18px;
   display:flex;align-items:center;gap:18px;
-  margin-bottom:18px;
-  flex-wrap:wrap;
+  margin-bottom:18px;flex-wrap:wrap;
 }
 .cet-item{display:flex;flex-direction:column;gap:2px;}
 .cet-label{font-size:.68rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-soft);}
 .cet-value{font-size:1.05rem;font-weight:700;color:var(--blue);}
+.cet-value.sm{font-size:.88rem;}
 
 /* ── TABLE ── */
 .table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
@@ -208,11 +172,7 @@ thead th:first-child{text-align:center;width:52px;}
 thead th:nth-child(2){text-align:left;}
 
 tbody tr:nth-child(even){background:#f8f9fc;}
-tbody td{
-  padding:7px 12px;text-align:right;
-  border-bottom:1px solid #eef0f5;
-  color:var(--text);
-}
+tbody td{padding:7px 12px;text-align:right;border-bottom:1px solid #eef0f5;color:var(--text);}
 tbody td:first-child{text-align:center;color:var(--text-soft);font-size:.78rem;width:52px;}
 tbody td:nth-child(2){text-align:left;}
 tbody tr:hover{background:var(--blue-pale);}
@@ -229,18 +189,10 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 
 /* ── PROTEÇÃO ── */
 .protecao{
-  margin-top:18px;
-  background:#fff;
-  border:1px solid var(--border);
-  border-radius:10px;
-  padding:14px 16px;
+  margin-top:18px;background:#fff;
+  border:1px solid var(--border);border-radius:10px;padding:14px 16px;
 }
-.protecao p{
-  font-size:.72rem;
-  color:var(--text-soft);
-  line-height:1.6;
-  margin-bottom:4px;
-}
+.protecao p{font-size:.72rem;color:var(--text-soft);line-height:1.6;margin-bottom:4px;}
 .protecao p:last-child{margin-bottom:0;}
 </style>
 </head>
@@ -287,7 +239,7 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 
       <div class="field">
         <label>Entrada (%)</label>
-        <input id="percEntrada" type="number" min="0" max="100" placeholder="10">
+        <input id="percEntrada" type="number" min="0" max="100">
       </div>
 
       <div class="field">
@@ -336,6 +288,8 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 // ========= UTIL =========
 function parseBR(v){return Number((v||"").replace(/\./g,"").replace(",",".")||0);}
 function round2(v){return Math.round(v*100)/100;}
+function trunc2(v){return Math.trunc(v*100)/100;}
+function trunc8(v){return Math.trunc(v*1e8)/1e8;}
 function format2(v){return v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
 
 function mask(el){
@@ -346,20 +300,29 @@ function mask(el){
   });
 }
 
-// ========= TAXAS =========
-// Taxa mensal por prazo (0% para 6 e 12 meses, 0,89% para 18 e 24 meses)
+// ========= CONSTANTES =========
 const TAXAS_PRAZO={6:0,12:0,18:0.0089,24:0.0089};
+const ENTRADA_MIN={leves:10,pesados:50};
+const TAC=1400;
 
 // ========= MODALIDADE =========
 let modalAtual='leves';
-const ENTRADA_MIN={leves:10,pesados:50};
 
 function setModal(m){
   modalAtual=m;
   document.getElementById('btnLeves').classList.toggle('active',m==='leves');
   document.getElementById('btnPesados').classList.toggle('active',m==='pesados');
-  document.getElementById('percEntrada').placeholder=ENTRADA_MIN[m];
   document.getElementById('erroEntrada').style.display='none';
+
+  // Se Pesados e % atual < 50: ajustar para 50
+  if(m==='pesados'){
+    let p=parseFloat(percEntrada.value);
+    if(isNaN(p)||p<50){
+      percEntrada.value=50;
+      let v=parseBR(valor.value);
+      if(v) valorEntrada.value=format2(v*0.5);
+    }
+  }
 }
 
 function atualizarTaxa(){
@@ -372,8 +335,40 @@ function atualizarTaxa(){
 
 // ========= PMT (Price — parcelas iguais) =========
 function calcPMT(pv,i,n){
-  if(i===0) return round2(pv/n);
-  return round2(pv*i/(1-Math.pow(1+i,-n)));
+  if(i===0) return pv/n;
+  return pv*i/(1-Math.pow(1+i,-n));
+}
+
+// ========= IOF (replica fórmula exata do Excel do banco) =========
+// Alíquota diária: 0,0082% a.d.
+// Base de cálculo: ano comercial (30 dias/mês), capped em 360 dias
+// IOF = TRUNC(AC21 + AC22, 2) onde:
+//   AC21 = base × TRUNC(R30 / (base − R30), 8)
+//   AC22 = TRUNC(base × TRUNC(0.0038/0.9962, 8), 2)
+//   R30  = Σ amort_i × 0.000082 × min(i×30, 360)
+// Para taxa=0%: usa base×(1/n) como PMT (multiplicação — replica float do Excel)
+function calcularIOF(base,taxa,n){
+  const DIARIA=0.000082;
+  const ADICIONAL=0.0038;
+
+  // PMT base (sem IOF) — para 0% usa multiplicação 1/n para coincidir com Excel
+  const pmt_base=taxa===0 ? base*(1/n) : base*taxa/(1-Math.pow(1+taxa,-n));
+
+  let R30=0;
+  let saldo=base;
+  for(let i=1;i<=n;i++){
+    const juros=round2(saldo*taxa);
+    const amort=pmt_base-juros;   // O33 = L33 - N33 (sem round2 no amort)
+    const dias=Math.min(i*30,360);
+    R30+=amort*DIARIA*dias;
+    saldo=round2(saldo-round2(amort));
+  }
+
+  const AB21=trunc8(R30/(base-R30));
+  const AC21=base*AB21;
+  const AB22=trunc8(ADICIONAL/(1-ADICIONAL));
+  const AC22=trunc2(base*AB22);
+  return trunc2(AC21+AC22);
 }
 
 // ========= CET (TIR — Newton-Raphson) =========
@@ -398,15 +393,15 @@ let tabela=[], fluxo=[];
 let simParams={};
 
 const PROTECAO=[
-  "a) Simulação não inclui a tarifa de abertura de crédito (TAC).",
-  "b) O fluxo apresenta valores aproximados, que poderão variar de acordo com cada operação. Os valores apresentados não são vinculativos.",
-  "c) Simulação sujeita a aprovação de crédito conforme política do Banco CNHI Capital.",
+  "a) O fluxo apresenta valores aproximados, que poderão variar de acordo com cada operação. Os valores apresentados não são vinculativos.",
+  "b) Simulação sujeita a aprovação de crédito conforme política do Banco CNHI Capital.",
 ];
 
 // ========= INIT =========
 window.onload=function(){
   mask(valor);
   mask(valorEntrada);
+  percEntrada.value=ENTRADA_MIN[modalAtual];  // pré-preenche com mínimo da modalidade
   atualizarTaxa();
 
   percEntrada.oninput=()=>{
@@ -450,7 +445,7 @@ function simular(){
 
   let erroEl=document.getElementById('erroEntrada');
   if(perc<entMin){
-    erroEl.textContent=`Entrada mínima para ${modalAtual==='leves'?'Leves':'Pesados'} é ${entMin}%. Informe pelo menos ${format2(valorV*entMin/100)}.`;
+    erroEl.textContent=`Entrada mínima para ${modalAtual==='leves'?'Leves':'Pesados'} é ${entMin}%. Informe pelo menos R$ ${format2(valorV*entMin/100)}.`;
     erroEl.style.display='block';
     return;
   }
@@ -463,36 +458,38 @@ function simular(){
 
   let prazoV=parseInt(prazo.value);
   let taxa=TAXAS_PRAZO[prazoV];
-  let saldo=round2(valorV-entrada);
-  let pmt=calcPMT(saldo,taxa,prazoV);
+  let saldoFin=round2(valorV-entrada);
+
+  let base=saldoFin+TAC;         // base s/ IOF = financiado + TAC
+  let iof=calcularIOF(base,taxa,prazoV);
+  let total=base+iof;             // valor financiado total = base + IOF
+  let pmt=round2(calcPMT(total,taxa,prazoV));
 
   tabela=[];
-  fluxo=[-saldo];
+  fluxo=[-saldoFin];   // CET: cliente recebe o saldoFin (TAC+IOF são custos financiados)
 
-  // Primeiro vencimento: mesmo dia do mês seguinte
-  let base=new Date();
-  let data1=new Date(base.getFullYear(),base.getMonth()+1,base.getDate());
+  let baseDate=new Date();
+  let saldo=total;
 
-  let saldoAtual=saldo;
   for(let i=1;i<=prazoV;i++){
-    let dataAtual=new Date(base.getFullYear(),base.getMonth()+i,base.getDate());
-    let juros=round2(saldoAtual*taxa);
-    let amort, parcela;
+    let dataAtual=new Date(baseDate.getFullYear(),baseDate.getMonth()+i,baseDate.getDate());
+    let juros=round2(saldo*taxa);
+    let amort,parcela;
     if(i<prazoV){
       amort=round2(pmt-juros);
       parcela=pmt;
     } else {
-      amort=saldoAtual;
+      amort=saldo;
       parcela=round2(amort+juros);
     }
-    tabela.push([i,dataAtual.toLocaleDateString("pt-BR"),saldoAtual,amort,juros,parcela]);
+    tabela.push([i,dataAtual.toLocaleDateString("pt-BR"),saldo,amort,juros,parcela]);
     fluxo.push(parcela);
-    saldoAtual=round2(saldoAtual-amort);
+    saldo=round2(saldo-amort);
   }
 
   let taxaAa=taxa===0?0:Math.pow(1+taxa,12)-1;
-  let cetMensal=taxa===0?0:calcularCET(fluxo);
-  let cetAnual=taxa===0?0:Math.pow(1+cetMensal,12)-1;
+  let cetMensal=calcularCET(fluxo);
+  let cetAnual=Math.pow(1+cetMensal,12)-1;
 
   let totAmort=round2(tabela.reduce((a,r)=>a+r[3],0));
   let totJuros=round2(tabela.reduce((a,r)=>a+r[4],0));
@@ -500,18 +497,19 @@ function simular(){
 
   let modalLabel=modalAtual==='leves'?'Leves (Minis e Retroescavadeiras)':'Pesados (Pá, Moto, Escavadeira)';
 
-  simParams={valorV,perc,entrada,prazoV,saldoFin:saldo,
+  simParams={valorV,perc,entrada,prazoV,saldoFin,tac:TAC,iof,total,
     taxaMes:format2(taxa*100),taxaAa:format2(taxaAa*100),
     cetMensal:format2(cetMensal*100),cetAnual:format2(cetAnual*100),
-    totAmort,totJuros,totValor,pmt,modalLabel};
+    pmt,totAmort,totJuros,totValor,modalLabel};
 
-  // ── HTML ──
+  // ── HTML RESULTADO ──
   let html=`
   <div class="cet-banner">
     <div class="cet-item"><span class="cet-label">Parcela</span><span class="cet-value">R$ ${format2(pmt)}</span></div>
+    <div class="cet-item"><span class="cet-label">IOF</span><span class="cet-value">R$ ${format2(iof)}</span></div>
+    <div class="cet-item"><span class="cet-label">TAC</span><span class="cet-value">R$ ${format2(TAC)}</span></div>
     <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${format2(cetMensal*100)}% a.m.</span></div>
     <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${format2(cetAnual*100)}% a.a.</span></div>
-    <div class="cet-item"><span class="cet-label">Total de Juros</span><span class="cet-value">R$ ${format2(totJuros)}</span></div>
     <div class="cet-item"><span class="cet-label">Total Pago</span><span class="cet-value">R$ ${format2(totValor)}</span></div>
   </div>
   <div class="table-wrap">
@@ -578,24 +576,17 @@ function gerarPDF(){
   // ── FAIXA AZUL ──
   doc.setFillColor(...BLUE);
   doc.rect(0,0,W,8,"F");
-  doc.setFontSize(7);
-  doc.setFont("helvetica","bold");
-  doc.setTextColor(...WHITE);
+  doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(...WHITE);
   doc.text("Simulador CDC Campanha  |  Linha CE / Campanha",10,5.2);
-  doc.setFont("helvetica","normal");
-  doc.setFontSize(6.5);
-  doc.setTextColor(180,200,230);
+  doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(180,200,230);
   doc.text(`Simulado em ${now.toLocaleDateString("pt-BR")} às ${now.toTimeString().slice(0,5)}`,W-10,5.2,{align:"right"});
 
-  // ── BLOCO DE PARÂMETROS ──
+  // ── BLOCO DE PARÂMETROS ── (3 linhas × 4 colunas = 12 campos)
   let y=13;
-  doc.setFillColor(248,249,252);
-  doc.setDrawColor(221,227,237);
-  doc.roundedRect(10,y,W-20,36,2,2,"FD");
+  doc.setFillColor(248,249,252);doc.setDrawColor(221,227,237);
+  doc.roundedRect(10,y,W-20,42,2,2,"FD");
 
-  doc.setFontSize(6.2);
-  doc.setFont("helvetica","bold");
-  doc.setTextColor(...GRAY);
+  doc.setFontSize(6.2);doc.setFont("helvetica","bold");doc.setTextColor(...GRAY);
   doc.text("PARÂMETROS DA SIMULAÇÃO",14,y+5);
 
   const campos=[
@@ -603,11 +594,13 @@ function gerarPDF(){
     ["Valor do Bem",     `R$ ${format2(p.valorV)}`],
     ["Entrada",          `${p.perc}%  (R$ ${format2(p.entrada)})`],
     ["Saldo Financiado", `R$ ${format2(p.saldoFin)}`],
+    ["TAC",              `R$ ${format2(p.tac)}`],
+    ["IOF",              `R$ ${format2(p.iof)}`],
+    ["Total Financiado", `R$ ${format2(p.total)}`],
     ["Prazo",            `${p.prazoV} meses`],
     ["Taxa de Juros",    `${p.taxaMes}% a.m.  |  ${p.taxaAa}% a.a.`],
     ["CET",              `${p.cetMensal}% a.m.  |  ${p.cetAnual}% a.a.`],
     ["Valor da Parcela", `R$ ${format2(p.pmt)}`],
-    ["Total de Juros",   `R$ ${format2(p.totJuros)}`],
     ["Total Pago",       `R$ ${format2(p.totValor)}`],
   ];
 
@@ -615,20 +608,14 @@ function gerarPDF(){
   campos.forEach(([lbl,val],i)=>{
     let cx=10+(i%4)*colW+3;
     let cy=y+8+Math.floor(i/4)*11;
-    doc.setFontSize(6);
-    doc.setFont("helvetica","normal");
-    doc.setTextColor(...GRAY);
+    doc.setFontSize(6);doc.setFont("helvetica","normal");doc.setTextColor(...GRAY);
     doc.text(lbl.toUpperCase(),cx,cy);
-    doc.setFontSize(7.5);
-    doc.setFont("helvetica","bold");
-    doc.setTextColor(15,20,45);
-    // truncate long text
-    let maxW=colW-4;
-    let lines=doc.splitTextToSize(val,maxW);
+    doc.setFontSize(7.5);doc.setFont("helvetica","bold");doc.setTextColor(15,20,45);
+    let lines=doc.splitTextToSize(val,colW-4);
     doc.text(lines[0],cx,cy+4.5);
   });
 
-  y+=40;
+  y+=46;
 
   // ── TABELA ──
   const marginL=10,marginR=10;
@@ -639,44 +626,21 @@ function gerarPDF(){
   const head=[["#","Data","Saldo Devedor\n(R$)","Amortização\n(R$)","Juros\n(R$)","Valor Parcela\n(R$)"]];
 
   const rows=tabela.map(r=>[
-    String(r[0]),
-    r[1],
-    format2(r[2]),
-    format2(r[3]),
+    String(r[0]),r[1],
+    format2(r[2]),format2(r[3]),
     r[4]===0?"—":format2(r[4]),
     format2(r[5])
   ]);
 
-  rows.push([
-    "TOTAL","","—",
-    format2(p.totAmort),
-    format2(p.totJuros),
-    format2(p.totValor)
-  ]);
+  rows.push(["TOTAL","","—",format2(p.totAmort),format2(p.totJuros),format2(p.totValor)]);
 
   doc.autoTable({
-    startY:y,
-    head:head,
-    body:rows,
+    startY:y,head:head,body:rows,
     margin:{left:marginL,right:marginR},
-    styles:{
-      font:"helvetica",
-      fontSize:6.8,
-      cellPadding:1.8,
-      textColor:[15,20,45],
-      lineColor:[221,227,237],
-      lineWidth:0.15,
-      overflow:"linebreak"
-    },
-    headStyles:{
-      fillColor:BLUE,
-      textColor:WHITE,
-      fontSize:6.2,
-      fontStyle:"bold",
-      halign:"right",
-      cellPadding:2,
-      minCellHeight:0
-    },
+    styles:{font:"helvetica",fontSize:6.8,cellPadding:1.8,textColor:[15,20,45],
+      lineColor:[221,227,237],lineWidth:0.15,overflow:"linebreak"},
+    headStyles:{fillColor:BLUE,textColor:WHITE,fontSize:6.2,fontStyle:"bold",
+      halign:"right",cellPadding:2,minCellHeight:0},
     columnStyles:{
       0:{halign:"center",cellWidth:colNum},
       1:{halign:"left",  cellWidth:colRest},
@@ -699,34 +663,22 @@ function gerarPDF(){
   // ── TEXTO DE PROTEÇÃO ──
   let finalY=doc.lastAutoTable.finalY+5;
   const maxTxtW=W-28;
-
-  doc.setFontSize(6.2);
-  doc.setFont("helvetica","normal");
+  doc.setFontSize(6.2);doc.setFont("helvetica","normal");
   let textoLinhas=[];
-  PROTECAO.forEach(t=>{
-    textoLinhas.push(...doc.splitTextToSize(t,maxTxtW),"");
-  });
+  PROTECAO.forEach(t=>{textoLinhas.push(...doc.splitTextToSize(t,maxTxtW),"");});
   textoLinhas.pop();
   let altBloco=textoLinhas.length*3.4+9;
 
   if(finalY+altBloco>H-8){doc.addPage();finalY=12;}
-
-  doc.setFillColor(248,249,252);
-  doc.setDrawColor(221,227,237);
+  doc.setFillColor(248,249,252);doc.setDrawColor(221,227,237);
   doc.roundedRect(10,finalY,W-20,altBloco,2,2,"FD");
-
-  doc.setFontSize(6.2);
-  doc.setFont("helvetica","bold");
-  doc.setTextColor(...GRAY);
+  doc.setFontSize(6.2);doc.setFont("helvetica","bold");doc.setTextColor(...GRAY);
   doc.text("INFORMAÇÕES IMPORTANTES",14,finalY+5);
-
-  doc.setFont("helvetica","normal");
-  doc.setTextColor(70,80,100);
+  doc.setFont("helvetica","normal");doc.setTextColor(70,80,100);
   let ty=finalY+9.5;
   textoLinhas.forEach(linha=>{
     if(ty>H-10){doc.addPage();ty=12;}
-    doc.text(linha,14,ty);
-    ty+=3.4;
+    doc.text(linha,14,ty);ty+=3.4;
   });
 
   doc.save("Simulacao_CDCCampanha.pdf");
