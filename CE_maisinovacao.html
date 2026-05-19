@@ -560,7 +560,7 @@ function gerarPDF(){
   let y=13;
   doc.setFillColor(248,249,252);
   doc.setDrawColor(221,227,237);
-  doc.roundedRect(10,y,W-20,30,2,2,"FD");
+  doc.roundedRect(10,y,W-20,40,2,2,"FD");
 
   doc.setFontSize(6.2);
   doc.setFont("helvetica","bold");
@@ -575,6 +575,7 @@ function gerarPDF(){
     ["Prazo",              `${p.prazoV} meses`],
     ["Taxa de Juros",      `${p.taxaMes}% a.m.  |  ${p.taxaAno}% a.a.`],
     ["CET",                `${p.cetMensal}% a.m.  |  ${p.cetAnual}% a.a.`],
+    ["TAC",                "R$ 1.400,00"],
     ["Total de Juros",     `R$ ${format2(p.totJuros)}`],
     ["Total Pago",         `R$ ${format2(p.totValor)}`],
   ];
@@ -592,7 +593,7 @@ function gerarPDF(){
     doc.text(val,cx,cy+4.5);
   });
 
-  y+=34;  // logo após o bloco
+  y+=44;  // logo após o bloco
 
   // ── TABELA ──
   // Coluna # pequena; Data + 4 colunas numéricas com largura igual
