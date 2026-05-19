@@ -179,23 +179,82 @@ A lista `FERIADOS` (constante `Set`) cobre 2026–2031 e foi extraída do Excel 
 ---
 
 ## Campos de taxa — comportamento obrigatório
+
+Os campos de taxa são **bidirecionais e sempre sincronizados**: alterar a taxa a.a. reflete na a.m. e vice-versa. Além dos inputs digitáveis, cada campo deve ter um `<select>` com as taxas pré-definidas do programa.
+
+### Dropdown de taxas pré-definidas
 ```js
-// Exibe sempre em percentual (não em decimal)
-taxaMes.value = format2(taxaMensalReal * 100);   // ex: "0,99"
+const TAXAS_AA = [0.126, 0.1598];  // taxas anuais disponíveis (12,60% e 15,98%)
 
-// Ao entrar no campo: 6 casas decimais do percentual
-taxaMes.onfocus = () => taxaMes.value = (taxaMensalReal * 100).toFixed(6).replace(".", ",");
+// Popula ambos os selects dinamicamente; opções em mesma ordem (índice compartilhado)
+TAXAS_AA.forEach((aa, i) => {
+  selectAno.add(new Option(format2(aa*100)+'% a.a.', i));
+  selectMes.add(new Option(format2(aaParaAm(aa)*100)+'% a.m.', i));
+});
 
-// Ao sair: volta para 2 casas decimais
-taxaMes.onblur = () => taxaMes.value = format2(taxaMensalReal * 100);
+// Aplica taxa por índice — atualiza globals, inputs e ambos os selects
+function applyTaxa(idx) {
+  taxaAnualReal  = TAXAS_AA[idx];
+  taxaMensalReal = aaParaAm(taxaAnualReal);
+  taxaAno.value  = format2(taxaAnualReal * 100);
+  taxaMes.value  = format2(taxaMensalReal * 100);
+  selectAno.selectedIndex = idx;
+  selectMes.selectedIndex = idx;
+}
+applyTaxa(0);  // padrão: primeira taxa da lista
 
-// Ao digitar: interpreta como percentual
+selectAno.onchange = () => applyTaxa(parseInt(selectAno.value));
+selectMes.onchange = () => applyTaxa(parseInt(selectMes.value));
+```
+
+### Inputs digitáveis (sincronização livre)
+```js
+// Ao digitar taxa a.m.: recalcula a.a.
 taxaMes.oninput = () => {
   taxaMensalReal = parseBR(taxaMes.value) / 100;
   taxaAnualReal  = amParaAa(taxaMensalReal);
   taxaAno.value  = format2(taxaAnualReal * 100);
 };
+// Ao digitar taxa a.a.: recalcula a.m.
+taxaAno.oninput = () => {
+  taxaAnualReal  = parseBR(taxaAno.value) / 100;
+  taxaMensalReal = aaParaAm(taxaAnualReal);
+  taxaMes.value  = format2(taxaMensalReal * 100);
+};
+
+// Ao entrar: exibe 6 casas decimais para precisão
+taxaMes.onfocus = () => taxaMes.value = (taxaMensalReal * 100).toFixed(6).replace(".", ",");
+taxaAno.onfocus = () => taxaAno.value = (taxaAnualReal  * 100).toFixed(6).replace(".", ",");
+// Ao sair: volta para 2 casas decimais
+taxaMes.onblur = () => taxaMes.value = format2(taxaMensalReal * 100);
+taxaAno.onblur = () => taxaAno.value = format2(taxaAnualReal  * 100);
 ```
+
+### HTML dos campos de taxa
+```html
+<div class="field">
+  <label>Taxa a.m. (%)</label>
+  <select id="selectMes"></select>
+  <div class="taxa-unit" style="margin-top:6px">
+    <input id="taxaMes">
+    <span>a.m.</span>
+  </div>
+</div>
+<div class="field">
+  <label>Taxa a.a. (%)</label>
+  <select id="selectAno"></select>
+  <div class="taxa-unit" style="margin-top:6px">
+    <input id="taxaAno">
+    <span>a.a.</span>
+  </div>
+</div>
+```
+
+**Regras:**
+- O `<select>` fica **acima** do input no mesmo campo
+- Selecionar no dropdown de a.a. atualiza automaticamente o dropdown e input de a.m. (e vice-versa)
+- Ao digitar um valor livre nos inputs, o dropdown pode não refletir (fica no último valor selecionado) — isso é aceitável
+- A taxa padrão ao abrir o simulador deve ser sempre a **primeira opção** de `TAXAS_AA`
 
 ### Campos de Entrada (%) e Entrada (R$) — comportamento obrigatório
 

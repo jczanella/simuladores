@@ -250,7 +250,8 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 
       <div class="field">
         <label>Taxa a.m. (%)</label>
-        <div class="taxa-unit">
+        <select id="selectMes"></select>
+        <div class="taxa-unit" style="margin-top:6px">
           <input id="taxaMes">
           <span>a.m.</span>
         </div>
@@ -258,7 +259,8 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 
       <div class="field">
         <label>Taxa a.a. (%)</label>
-        <div class="taxa-unit">
+        <select id="selectAno"></select>
+        <div class="taxa-unit" style="margin-top:6px">
           <input id="taxaAno">
           <span>a.a.</span>
         </div>
@@ -303,6 +305,8 @@ function mask(el){
 function aaParaAm(aa){return Math.pow(1+aa,1/12)-1;}
 function amParaAa(am){return Math.pow(1+am,12)-1;}
 
+const TAXAS_AA=[0.126,0.1598];
+
 let taxaMensalReal=aaParaAm(0.126);
 let taxaAnualReal=0.126;
 
@@ -311,8 +315,23 @@ window.onload=function(){
   mask(valor);
   mask(valorEntrada);
 
-  taxaMes.value=format2(taxaMensalReal*100);
-  taxaAno.value=format2(taxaAnualReal*100);
+  TAXAS_AA.forEach((aa,i)=>{
+    selectAno.add(new Option(format2(aa*100)+'% a.a.',i));
+    selectMes.add(new Option(format2(aaParaAm(aa)*100)+'% a.m.',i));
+  });
+
+  function applyTaxa(idx){
+    taxaAnualReal=TAXAS_AA[idx];
+    taxaMensalReal=aaParaAm(taxaAnualReal);
+    taxaAno.value=format2(taxaAnualReal*100);
+    taxaMes.value=format2(taxaMensalReal*100);
+    selectAno.selectedIndex=idx;
+    selectMes.selectedIndex=idx;
+  }
+  applyTaxa(0);
+
+  selectAno.onchange=()=>applyTaxa(parseInt(selectAno.value));
+  selectMes.onchange=()=>applyTaxa(parseInt(selectMes.value));
 
   percEntrada.oninput=()=>{
     let p=parseFloat(percEntrada.value);
