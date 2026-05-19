@@ -251,19 +251,6 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
       <div class="field">
         <label>Taxa a.m. (%)</label>
         <select id="selectMes"></select>
-        <div class="taxa-unit" style="margin-top:6px">
-          <input id="taxaMes">
-          <span>a.m.</span>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Taxa a.a. (%)</label>
-        <select id="selectAno"></select>
-        <div class="taxa-unit" style="margin-top:6px">
-          <input id="taxaAno">
-          <span>a.a.</span>
-        </div>
       </div>
 
     </div>
@@ -316,21 +303,16 @@ window.onload=function(){
   mask(valorEntrada);
 
   TAXAS_AA.forEach((aa,i)=>{
-    selectAno.add(new Option(format2(aa*100)+'% a.a.',i));
     selectMes.add(new Option(format2(aaParaAm(aa)*100)+'% a.m.',i));
   });
 
   function applyTaxa(idx){
     taxaAnualReal=TAXAS_AA[idx];
     taxaMensalReal=aaParaAm(taxaAnualReal);
-    taxaAno.value=format2(taxaAnualReal*100);
-    taxaMes.value=format2(taxaMensalReal*100);
-    selectAno.selectedIndex=idx;
     selectMes.selectedIndex=idx;
   }
   applyTaxa(0);
 
-  selectAno.onchange=()=>applyTaxa(parseInt(selectAno.value));
   selectMes.onchange=()=>applyTaxa(parseInt(selectMes.value));
 
   percEntrada.oninput=()=>{
@@ -362,22 +344,6 @@ window.onload=function(){
     percEntrada.value=p;
     valorEntrada.value=format2(v*p/100);
   };
-  taxaMes.oninput=()=>{
-    taxaMensalReal=parseBR(taxaMes.value)/100;
-    taxaAnualReal=amParaAa(taxaMensalReal);
-    taxaAno.value=format2(taxaAnualReal*100);
-  };
-  taxaAno.oninput=()=>{
-    taxaAnualReal=parseBR(taxaAno.value)/100;
-    taxaMensalReal=aaParaAm(taxaAnualReal);
-    taxaMes.value=format2(taxaMensalReal*100);
-  };
-  // ao entrar: mostra 6 casas decimais do percentual (ex: 0,993800)
-  taxaMes.onfocus=()=>taxaMes.value=(taxaMensalReal*100).toFixed(6).replace(".",",");
-  taxaAno.onfocus=()=>taxaAno.value=(taxaAnualReal*100).toFixed(6).replace(".",",");
-  // ao sair: volta a 2 casas decimais do percentual (ex: 0,99)
-  taxaMes.onblur=()=>taxaMes.value=format2(taxaMensalReal*100);
-  taxaAno.onblur=()=>taxaAno.value=format2(taxaAnualReal*100);
 };
 
 // ========= JUROS =========
