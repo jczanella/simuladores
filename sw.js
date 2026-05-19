@@ -4,6 +4,7 @@ const ARQUIVOS = [
   '/simuladores/',
   '/simuladores/index.html',
   '/simuladores/CE_maisinovacao.html',
+  '/simuladores/CE_cdccampanha.html',
   '/simuladores/manifest.json',
   '/simuladores/icon-192.png',
   '/simuladores/icon-512.png',
