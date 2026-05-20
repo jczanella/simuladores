@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador Pronamp CE</title>
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b3c6b">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --blue:#1b3c6b;
+  --blue-light:#2451a0;
+  --blue-pale:#e8eef7;
+  --bg:#f5f7fa;
+  --card:#ffffff;
+  --text:#1a1a2e;
+  --text-soft:#5a6377;
+  --border:#dde3ed;
+  --radius:14px;
+  --shadow:0 2px 8px rgba(27,60,107,.10);
+}
+
+body{
+  font-family:'Inter',Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding-bottom:48px;
+}
+
+header{
+  background:var(--blue);
+  color:#fff;
+  padding:20px 20px 18px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.header-text h1{font-size:1.1rem;font-weight:700;letter-spacing:.2px;}
+.header-text p{font-size:.78rem;opacity:.72;margin-top:3px;}
+
+main{max-width:900px;margin:0 auto;padding:28px 16px 0;}
+
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:22px 20px;
+  margin-bottom:20px;
+}
+.card-title{
+  font-size:.75rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  color:var(--text-soft);
+  margin-bottom:16px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:14px;
+}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{
+  font-size:.72rem;font-weight:600;
+  letter-spacing:.4px;text-transform:uppercase;
+  color:var(--text-soft);
+}
+.field input,.field select{
+  padding:9px 11px;
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  font-family:inherit;
+  font-size:.93rem;
+  color:var(--text);
+  background:#fff;
+  outline:none;
+  transition:border-color .15s;
+  width:100%;
+}
+.field input:focus,.field select:focus{border-color:var(--blue);}
+.field input[readonly]{
+  background:#f5f7fa;
+  color:var(--text-soft);
+  cursor:default;
+}
+
+/* info strip */
+.info-strip{
+  margin-top:14px;
+  background:var(--blue-pale);
+  border:1px solid #c3d1e8;
+  border-radius:8px;
+  padding:9px 14px;
+  font-size:.8rem;
+  color:var(--blue);
+  font-weight:600;
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+}
+.info-strip span{opacity:.8;}
+.info-strip strong{opacity:1;}
+
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 20px;
+  border:none;border-radius:8px;
+  font-family:inherit;font-size:.88rem;font-weight:600;
+  cursor:pointer;transition:all .15s;
+  text-decoration:none;
+}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{background:var(--blue-light);}
+.btn-secondary{background:var(--bg);color:var(--blue);border:1.5px solid var(--border);}
+.btn-secondary:hover{background:var(--blue-pale);border-color:var(--blue);}
+.btn-ghost{background:transparent;color:rgba(255,255,255,.8);border:1.5px solid rgba(255,255,255,.3);margin-left:auto;}
+.btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff;}
+.btn svg{width:16px;height:16px;fill:currentColor;}
+
+#resultado{margin-top:4px;}
+
+.cet-banner{
+  background:var(--blue-pale);
+  border:1px solid #c3d1e8;
+  border-radius:10px;
+  padding:12px 18px;
+  display:flex;align-items:center;gap:18px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
+}
+.cet-item{display:flex;flex-direction:column;gap:2px;}
+.cet-label{font-size:.68rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-soft);}
+.cet-value{font-size:1.05rem;font-weight:700;color:var(--blue);}
+
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{
+  width:100%;border-collapse:collapse;
+  background:#fff;font-size:.83rem;
+  font-variant-numeric:tabular-nums;
+}
+thead th{
+  background:var(--blue);color:#fff;
+  padding:9px 12px;text-align:right;
+  font-size:.72rem;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+  white-space:nowrap;
+}
+thead th:first-child{text-align:center;width:52px;}
+thead th:nth-child(2){text-align:left;}
+
+tbody tr:nth-child(even){background:#f8f9fc;}
+tbody td{
+  padding:7px 12px;text-align:right;
+  border-bottom:1px solid #eef0f5;
+  color:var(--text);
+}
+tbody td:first-child{text-align:center;color:var(--text-soft);font-size:.78rem;width:52px;}
+tbody td:nth-child(2){text-align:left;}
+tbody tr:hover{background:var(--blue-pale);}
+tbody tr.carencia td{color:#7a5c00;background:#fffbea;}
+tbody tr.carencia td:first-child{color:#7a5c00;}
+
+tfoot tr{background:var(--blue);}
+tfoot td{
+  padding:9px 12px;text-align:right;
+  color:#fff;font-weight:700;font-size:.83rem;
+  font-variant-numeric:tabular-nums;
+}
+tfoot td:first-child{text-align:center;width:52px;font-weight:400;opacity:.8;}
+tfoot td:nth-child(2){text-align:left;font-weight:400;opacity:.8;}
+tfoot td:nth-child(3){opacity:.8;font-weight:400;}
+
+.protecao{
+  margin-top:18px;
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:14px 16px;
+}
+.protecao p{
+  font-size:.72rem;
+  color:var(--text-soft);
+  line-height:1.6;
+  margin-bottom:4px;
+}
+.protecao p:last-child{margin-bottom:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-text">
+    <h1>Simulador Pronamp CE</h1>
+    <p>Linha CE / Construção BNDES · 10% a.a.</p>
+  </div>
+  <a href="index.html" class="btn btn-ghost" style="padding:8px 14px;font-size:.82rem;">
+    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    Voltar ao Início
+  </a>
+</header>
+
+<main>
+
+  <div class="card">
+    <div class="card-title">Parâmetros da Simulação</div>
+
+    <div class="form-grid">
+
+      <div class="field">
+        <label>Valor do Bem (R$)</label>
+        <input id="valor" placeholder="0">
+      </div>
+
+      <div class="field">
+        <label>Entrada (%)</label>
+        <input id="percEntrada" type="number" min="0" max="100" placeholder="10">
+      </div>
+
+      <div class="field">
+        <label>Entrada (R$)</label>
+        <input id="valorEntrada" placeholder="0">
+      </div>
+
+      <div class="field">
+        <label>Carência — 1º Vencimento</label>
+        <select id="selectCarencia"></select>
+      </div>
+
+      <div class="field">
+        <label>Periodicidade</label>
+        <select id="selectPeriodicidade">
+          <option value="6">Semestral (a cada 6 meses)</option>
+          <option value="12">Anual (a cada 12 meses)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Taxa de Juros</label>
+        <input value="10,00% a.a." readonly>
+      </div>
+
+    </div>
+
+    <!-- strip dinâmico: mostra nº de parcelas e prazo total -->
+    <div class="info-strip" id="infoStrip">
+      <span>Selecione os parâmetros acima para ver o resumo da operação</span>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="simular()">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+        Simular
+      </button>
+      <button class="btn btn-secondary" onclick="gerarPDF()">
+        <svg viewBox="0 0 24 24"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>
+        Gerar PDF
+      </button>
+    </div>
+  </div>
+
+  <div id="resultado"></div>
+
+</main>
+
+<script>
+
+// ========= UTIL =========
+function parseBR(v){return Number((v||"").replace(/\./g,"").replace(",",".")||0);}
+function round2(v){return Math.round(v*100)/100;}
+function format2(v){return v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+function mask(el){
+  el.addEventListener("input",()=>{
+    let raw=el.value.replace(/\D/g,"");
+    if(!raw){el.value="";return;}
+    el.value=Number(raw).toLocaleString("pt-BR");
+  });
+}
+
+// ========= TAXA FIXA =========
+const TAXA_ANUAL = 0.10;
+
+// ========= FERIADOS (2026-2031) =========
+const FERIADOS=new Set([
+  new Date(2026,0,2),new Date(2026,2,1),new Date(2026,2,2),new Date(2026,3,16),
+  new Date(2026,3,22),new Date(2026,4,2),new Date(2026,5,17),new Date(2026,8,8),
+  new Date(2026,9,13),new Date(2026,10,3),new Date(2026,10,16),new Date(2026,11,26),
+  new Date(2027,0,2),new Date(2027,1,21),new Date(2027,1,22),new Date(2027,3,8),
+  new Date(2027,3,22),new Date(2027,4,2),new Date(2027,5,9),new Date(2027,8,8),
+  new Date(2027,9,13),new Date(2027,10,3),new Date(2027,10,16),new Date(2027,11,26),
+  new Date(2028,0,2),new Date(2028,1,13),new Date(2028,1,14),new Date(2028,2,30),
+  new Date(2028,3,22),new Date(2028,4,2),new Date(2028,4,31),new Date(2028,8,8),
+  new Date(2028,9,13),new Date(2028,10,3),new Date(2028,10,16),new Date(2028,10,21),
+  new Date(2028,11,26),new Date(2029,0,2),new Date(2029,2,4),new Date(2029,2,5),
+  new Date(2029,3,19),new Date(2029,3,22),new Date(2029,4,2),new Date(2029,5,20),
+  new Date(2029,8,8),new Date(2029,9,13),new Date(2029,10,3),new Date(2029,10,16),
+  new Date(2029,10,21),new Date(2029,11,26),new Date(2030,0,2),new Date(2030,1,17),
+  new Date(2030,1,18),new Date(2030,3,4),new Date(2030,3,22),new Date(2030,4,2),
+  new Date(2030,5,5),new Date(2030,8,8),new Date(2030,9,13),new Date(2030,10,3),
+  new Date(2030,10,16),new Date(2030,10,21),new Date(2030,11,26),new Date(2031,0,2),
+  new Date(2031,1,9),new Date(2031,1,10),new Date(2031,2,27),new Date(2031,3,22),
+  new Date(2031,4,2),new Date(2031,4,28),new Date(2031,8,8),new Date(2031,9,13),
+  new Date(2031,10,3),new Date(2031,10,16),new Date(2031,10,21),new Date(2031,11,26),
+].map(d=>d.toDateString()));
+
+function eFeriado(d){return FERIADOS.has(d.toDateString());}
+function proximoDiaUtil(d){
+  let r=new Date(d);
+  while(r.getDay()===0||r.getDay()===6||eFeriado(r)) r.setDate(r.getDate()+1);
+  return r;
+}
+function gerarData(base,mes){
+  let d=new Date(base);
+  d.setMonth(d.getMonth()+mes);
+  d.setDate(15);
+  return proximoDiaUtil(d);
+}
+
+// ========= JUROS (dia útil exato, igual ao +Inovação) =========
+function diasNoAno(data){
+  let a=data.getFullYear();
+  return (a%4===0&&(a%100!==0||a%400===0))?366:365;
+}
+function jurosPeriodo(saldo,taxaAnual,dias,dataRef){
+  let dn=diasNoAno(dataRef);
+  let rate=Math.round((Math.pow(1+taxaAnual,dias/dn)-1)*1e6)/1e6;
+  return round2(saldo*rate);
+}
+
+// ========= CET =========
+function calcularCET(fluxo){
+  let taxa=0.01;
+  for(let k=0;k<200;k++){
+    let f=0,df=0;
+    for(let t=0;t<fluxo.length;t++){
+      if(fluxo[t]===0)continue;
+      f+=fluxo[t]/Math.pow(1+taxa,t);
+      df+=-t*fluxo[t]/Math.pow(1+taxa,t+1);
+    }
+    if(Math.abs(df)<1e-12)break;
+    let nt=taxa-f/df;
+    if(Math.abs(nt-taxa)<1e-8)break;
+    taxa=nt;
+  }
+  return taxa;
+}
+
+// ========= ESTADO GLOBAL =========
+let tabela=[];
+let simParams={};
+
+const PROTECAO=[
+  "a) Simulação não inclui a tarifa de abertura de crédito.",
+  "b) O fluxo apresenta valores aproximados, que poderão variar de acordo com cada operação e normas do BNDES. Os valores apresentados não são vinculativos.",
+  "c) Simulação sujeita a aprovação de crédito conforme política do Banco CNHI Capital.",
+  "d) A TFB sofre alteração diária informada pelo BNDES. A taxa total apresentada trata-se de média dos últimos 30 (trinta) dias. A taxa que valerá para o financiamento será a cotação fixada na data da contratação da operação. Além disso, a taxa fixa também dependerá do prazo de liberação de recursos, que deverá ocorrer em até 60 dias. (Consulte Circular 43/2918 do BNDES)."
+];
+
+// ========= HELPER: nº de parcelas =========
+function calcNParcelas(mesesCar, periodoMeses){
+  return Math.floor((96-mesesCar)/periodoMeses);
+}
+
+// ========= ATUALIZA INFO STRIP =========
+function atualizarStrip(){
+  let mesesCar=parseInt(selectCarencia.value);
+  let periodoMeses=parseInt(selectPeriodicidade.value);
+  let nParcelas=calcNParcelas(mesesCar,periodoMeses);
+  let prazoTotal=mesesCar+nParcelas*periodoMeses;
+  let labelPer=periodoMeses===6?"semestrais":"anuais";
+  let data0=gerarData(new Date(),mesesCar);
+  infoStrip.innerHTML=
+    `<strong>${nParcelas} parcelas ${labelPer}</strong>`+
+    `<span>1º vencimento: ${data0.toLocaleDateString("pt-BR")}</span>`+
+    `<span>Carência: ${mesesCar} meses</span>`+
+    `<span>Prazo total: ${prazoTotal} meses (${(prazoTotal/12).toFixed(1).replace(".",",")} anos)</span>`;
+}
+
+// ========= INIT =========
+window.onload=function(){
+  mask(valor);
+  mask(valorEntrada);
+
+  // Popula carência: 3-18 meses, padrão 12
+  for(let m=3;m<=18;m++){
+    let opt=new Option(m+" meses",m);
+    selectCarencia.add(opt);
+  }
+  selectCarencia.value=12;
+
+  atualizarStrip();
+  selectCarencia.onchange=atualizarStrip;
+  selectPeriodicidade.onchange=atualizarStrip;
+
+  percEntrada.oninput=()=>{
+    let p=parseFloat(percEntrada.value);
+    if(p>100){percEntrada.value=100;p=100;}
+    let v=parseBR(valor.value);
+    if(!v||isNaN(p))return;
+    valorEntrada.value=format2(v*p/100);
+  };
+  percEntrada.onblur=()=>{
+    let p=parseFloat(percEntrada.value);
+    if(isNaN(p))return;
+    p=Math.min(Math.max(Math.round(p),0),100);
+    percEntrada.value=p;
+    let v=parseBR(valor.value);
+    if(v)valorEntrada.value=format2(v*p/100);
+  };
+  valorEntrada.oninput=()=>{
+    let v=parseBR(valor.value);
+    let e=parseBR(valorEntrada.value);
+    if(!v||!e){percEntrada.value='';return;}
+    percEntrada.value=Math.min(Math.round(e/v*100),100);
+  };
+  valorEntrada.onblur=()=>{
+    let v=parseBR(valor.value);
+    let e=parseBR(valorEntrada.value);
+    if(!v||!e)return;
+    let p=Math.min(Math.round(e/v*100),100);
+    percEntrada.value=p;
+    valorEntrada.value=format2(v*p/100);
+  };
+};
+
+// ========= SIMULAÇÃO =========
+function simular(){
+  let valorV=parseBR(valor.value);
+  if(!valorV){alert("Informe o Valor do Bem.");return;}
+  let perc=Math.round(parseFloat(percEntrada.value||0));
+  let entrada=round2(valorV*perc/100);
+  valorEntrada.value=format2(entrada);
+  percEntrada.value=perc;
+
+  let mesesCar=parseInt(selectCarencia.value);
+  let periodoMeses=parseInt(selectPeriodicidade.value);
+  let nParcelas=calcNParcelas(mesesCar,periodoMeses);
+  let prazoTotal=mesesCar+nParcelas*periodoMeses;
+
+  let saldoInicial=round2(valorV-entrada);
+  let amort=round2(saldoInicial/nParcelas);
+  let saldo=saldoInicial;
+
+  tabela=[];
+
+  // fluxo esparso (índice = mês a partir de hoje) para CET
+  let fluxo=new Array(prazoTotal+1).fill(0);
+  fluxo[0]=-saldoInicial;
+
+  let base=new Date();
+  let data0=gerarData(base,mesesCar);
+  let dias0=Math.floor((data0-base)/86400000);
+  let j0=jurosPeriodo(saldo,TAXA_ANUAL,dias0,data0);
+
+  tabela.push([0,data0.toLocaleDateString("pt-BR"),saldo,0,j0,j0]);
+  fluxo[mesesCar]+=j0;
+
+  let anterior=data0;
+  for(let i=1;i<=nParcelas;i++){
+    let dataAtual=gerarData(data0,i*periodoMeses);
+    let dias=Math.floor((dataAtual-anterior)/86400000);
+    let juros=jurosPeriodo(saldo,TAXA_ANUAL,dias,dataAtual);
+    // ajuste final: última parcela absorve diferença de arredondamento
+    let amortI=(i===nParcelas)?round2(saldo):amort;
+    let parcela=round2(juros+amortI);
+    tabela.push([i,dataAtual.toLocaleDateString("pt-BR"),saldo,amortI,juros,parcela]);
+    let idxMes=Math.min(mesesCar+i*periodoMeses,prazoTotal);
+    fluxo[idxMes]+=parcela;
+    saldo=round2(saldo-amortI);
+    anterior=dataAtual;
+  }
+
+  let cetMensal=calcularCET(fluxo);
+  let cetAnual=Math.pow(1+cetMensal,12)-1;
+
+  let totAmort=round2(tabela.reduce((a,r)=>a+r[3],0));
+  let totJuros=round2(tabela.reduce((a,r)=>a+r[4],0));
+  let totValor=round2(tabela.reduce((a,r)=>a+r[5],0));
+  let labelPer=periodoMeses===6?"Semestral":"Anual";
+
+  simParams={
+    valorV,perc,entrada,saldoFin:saldoInicial,
+    mesesCar,periodoMeses,labelPer,nParcelas,prazoTotal,
+    cetMensal:format2(cetMensal*100),cetAnual:format2(cetAnual*100),
+    totAmort,totJuros,totValor
+  };
+
+  let html=`
+  <div class="cet-banner">
+    <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${format2(cetMensal*100)}% a.m.</span></div>
+    <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${format2(cetAnual*100)}% a.a.</span></div>
+    <div class="cet-item"><span class="cet-label">Total de Juros</span><span class="cet-value">R$ ${format2(totJuros)}</span></div>
+    <div class="cet-item"><span class="cet-label">Total Pago</span><span class="cet-value">R$ ${format2(totValor)}</span></div>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Data</th>
+        <th>Saldo Devedor</th>
+        <th>Amortização</th>
+        <th>Juros</th>
+        <th>Valor Parcela</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  tabela.forEach(r=>{
+    let cls=r[0]===0?'carencia':'';
+    html+=`<tr class="${cls}">
+      <td>${r[0]===0?'Car.':r[0]}</td>
+      <td>${r[1]}</td>
+      <td>${format2(r[2])}</td>
+      <td>${r[3]===0?'—':format2(r[3])}</td>
+      <td>${format2(r[4])}</td>
+      <td><strong>${format2(r[5])}</strong></td>
+    </tr>`;
+  });
+
+  html+=`
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>—</td>
+        <td>TOTAL</td>
+        <td>—</td>
+        <td>${format2(totAmort)}</td>
+        <td>${format2(totJuros)}</td>
+        <td>${format2(totValor)}</td>
+      </tr>
+    </tfoot>
+  </table>
+  </div>
+  <div class="protecao">`;
+
+  PROTECAO.forEach(t=>{html+=`<p>${t}</p>`;});
+  html+=`</div>`;
+
+  resultado.innerHTML=html;
+}
+
+// ========= PDF =========
+function gerarPDF(){
+  if(!tabela.length){alert("Simule primeiro.");return;}
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
+  const BLUE=[27,60,107];
+  const WHITE=[255,255,255];
+  const GRAY=[90,99,119];
+  const now=new Date();
+  const p=simParams;
+
+  // faixa azul
+  doc.setFillColor(...BLUE);
+  doc.rect(0,0,W,8,"F");
+  doc.setFontSize(7);
+  doc.setFont("helvetica","bold");
+  doc.setTextColor(...WHITE);
+  doc.text("Simulador Pronamp CE  |  Linha CE / Construção BNDES",10,5.2);
+  doc.setFont("helvetica","normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(180,200,230);
+  doc.text(`Simulado em ${now.toLocaleDateString("pt-BR")} às ${now.toTimeString().slice(0,5)}`,W-10,5.2,{align:"right"});
+
+  // bloco parâmetros
+  let y=13;
+  doc.setFillColor(248,249,252);
+  doc.setDrawColor(221,227,237);
+  doc.roundedRect(10,y,W-20,40,2,2,"FD");
+
+  doc.setFontSize(6.2);
+  doc.setFont("helvetica","bold");
+  doc.setTextColor(...GRAY);
+  doc.text("PARÂMETROS DA SIMULAÇÃO",14,y+5);
+
+  const campos=[
+    ["Valor do Bem",      `R$ ${format2(p.valorV)}`],
+    ["Entrada",           `${p.perc}%  (R$ ${format2(p.entrada)})`],
+    ["Saldo Financiado",  `R$ ${format2(p.saldoFin)}`],
+    ["Taxa de Juros",     "10,00% a.a. (Pronamp CE)"],
+    ["Carência",          `${p.mesesCar} meses`],
+    ["Periodicidade",     p.labelPer],
+    ["Nº de Parcelas",    `${p.nParcelas} parcelas`],
+    ["Prazo Total",       `${p.prazoTotal} meses`],
+    ["CET",               `${p.cetMensal}% a.m.  |  ${p.cetAnual}% a.a.`],
+    ["Total de Juros",    `R$ ${format2(p.totJuros)}`],
+    ["Total Pago",        `R$ ${format2(p.totValor)}`],
+  ];
+
+  // 3 linhas × 4 colunas (última linha pode ter menos)
+  const colW=(W-20)/4;
+  campos.forEach(([lbl,val],i)=>{
+    let cx=10+(i%4)*colW+3;
+    let cy=y+8+Math.floor(i/4)*11;
+    if(cy>y+38)return; // não extrapola o bloco
+    doc.setFontSize(6);
+    doc.setFont("helvetica","normal");
+    doc.setTextColor(...GRAY);
+    doc.text(lbl.toUpperCase(),cx,cy);
+    doc.setFontSize(7.5);
+    doc.setFont("helvetica","bold");
+    doc.setTextColor(15,20,45);
+    doc.text(val,cx,cy+4.5);
+  });
+
+  y+=44;
+
+  // tabela
+  const marginL=10,marginR=10;
+  const tableW=W-marginL-marginR;
+  const colNum=10;
+  const colRest=(tableW-colNum)/5;
+
+  const head=[["#","Data","Saldo Devedor\n(R$)","Amortização\n(R$)","Juros\n(R$)","Valor Parcela\n(R$)"]];
+
+  const rows=tabela.map(r=>[
+    r[0]===0?"Car.":String(r[0]),
+    r[1],
+    format2(r[2]),
+    r[3]===0?"—":format2(r[3]),
+    format2(r[4]),
+    format2(r[5])
+  ]);
+
+  rows.push([
+    "TOTAL","","—",
+    format2(p.totAmort),
+    format2(p.totJuros),
+    format2(p.totValor)
+  ]);
+
+  doc.autoTable({
+    startY:y,
+    head:head,
+    body:rows,
+    margin:{left:marginL,right:marginR},
+    styles:{
+      font:"helvetica",
+      fontSize:6.8,
+      cellPadding:1.8,
+      textColor:[15,20,45],
+      lineColor:[221,227,237],
+      lineWidth:0.15,
+      overflow:"linebreak"
+    },
+    headStyles:{
+      fillColor:BLUE,
+      textColor:WHITE,
+      fontSize:6.2,
+      fontStyle:"bold",
+      halign:"right",
+      cellPadding:2,
+      minCellHeight:0
+    },
+    columnStyles:{
+      0:{halign:"center",cellWidth:colNum},
+      1:{halign:"left",  cellWidth:colRest},
+      2:{halign:"right", cellWidth:colRest},
+      3:{halign:"right", cellWidth:colRest},
+      4:{halign:"right", cellWidth:colRest},
+      5:{halign:"right", cellWidth:colRest,fontStyle:"bold"}
+    },
+    alternateRowStyles:{fillColor:[248,249,252]},
+    didParseCell:function(data){
+      if(data.section==="body"){
+        if(data.row.index===0){
+          data.cell.styles.fillColor=[255,251,234];
+          data.cell.styles.textColor=[122,92,0];
+        }
+        if(data.row.index===rows.length-1){
+          data.cell.styles.fillColor=BLUE;
+          data.cell.styles.textColor=WHITE;
+          data.cell.styles.fontStyle="bold";
+          data.cell.styles.fontSize=7.2;
+        }
+      }
+    }
+  });
+
+  // texto de proteção
+  let finalY=doc.lastAutoTable.finalY+5;
+  const maxTxtW=W-28;
+
+  doc.setFontSize(6.2);
+  doc.setFont("helvetica","normal");
+  let textoLinhas=[];
+  PROTECAO.forEach(t=>{
+    textoLinhas.push(...doc.splitTextToSize(t,maxTxtW),"");
+  });
+  textoLinhas.pop();
+  let altBloco=textoLinhas.length*3.4+9;
+
+  if(finalY+altBloco>H-8){doc.addPage();finalY=12;}
+
+  doc.setFillColor(248,249,252);
+  doc.setDrawColor(221,227,237);
+  doc.roundedRect(10,finalY,W-20,altBloco,2,2,"FD");
+
+  doc.setFontSize(6.2);
+  doc.setFont("helvetica","bold");
+  doc.setTextColor(...GRAY);
+  doc.text("INFORMAÇÕES IMPORTANTES",14,finalY+5);
+
+  doc.setFont("helvetica","normal");
+  doc.setTextColor(70,80,100);
+  let ty=finalY+9.5;
+  textoLinhas.forEach(linha=>{
+    if(ty>H-10){doc.addPage();ty=12;}
+    doc.text(linha,14,ty);
+    ty+=3.4;
+  });
+
+  doc.save("Simulacao_PronampCE.pdf");
+}
+
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/simuladores/sw.js');
+  });
+}
+</script>
+</body>
+</html>
