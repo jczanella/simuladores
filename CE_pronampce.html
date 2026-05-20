@@ -415,16 +415,26 @@ window.onload=function(){
   }
   selectCarencia.value=12;
 
-  // Popula prazo: 2-8 anos, padrão 8
-  for(let a=2;a<=8;a++){
-    selectPrazo.add(new Option(a+" anos",a));
+  // Reconstrói prazo dinamicamente conforme carência + periodicidade
+  function atualizarSelectPrazo(){
+    let mesesCar=parseInt(selectCarencia.value);
+    let periodoMeses=parseInt(selectPeriodicidade.value);
+    let minAnos=Math.ceil((mesesCar+periodoMeses)/12);
+    let atual=parseInt(selectPrazo.value)||8;
+    selectPrazo.innerHTML='';
+    for(let a=minAnos;a<=8;a++){
+      selectPrazo.add(new Option(a+" anos",a));
+    }
+    // mantém seleção anterior se ainda válida; senão vai para o máximo
+    selectPrazo.value=Math.max(atual,minAnos);
+    if(!selectPrazo.value||selectPrazo.selectedIndex<0) selectPrazo.value=8;
+    atualizarStrip();
   }
-  selectPrazo.value=8;
 
-  atualizarStrip();
-  selectCarencia.onchange=atualizarStrip;
+  atualizarSelectPrazo();
+  selectCarencia.onchange=atualizarSelectPrazo;
+  selectPeriodicidade.onchange=atualizarSelectPrazo;
   selectPrazo.onchange=atualizarStrip;
-  selectPeriodicidade.onchange=atualizarStrip;
 
   percEntrada.oninput=()=>{
     let p=parseFloat(percEntrada.value);

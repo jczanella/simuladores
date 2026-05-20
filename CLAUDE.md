@@ -462,7 +462,7 @@ for (let i = 0; i < nParcelas; i++) {
 
 ### Campos de entrada (Pronamp CE)
 - **Carência**: selecionável 3–18 meses, padrão 12 meses. Primeiro vencimento = dia 15 (ou próximo dia útil), `mesesCar` meses após a data da simulação.
-- **Prazo da Operação**: selecionável 2–8 anos, padrão 8 anos. Define o prazo máximo total (carência + parcelas). O nº de parcelas é calculado automaticamente.
+- **Prazo da Operação**: select de 1–8 anos, padrão 8 anos (sempre o máximo disponível). O mínimo é dinâmico: `ceil((mesesCar + periodoMeses) / 12)` — ou seja, o menor ano inteiro que comporta pelo menos 1 parcela. O select é reconstruído sempre que carência ou periodicidade mudam.
 - **Periodicidade**: Anual (padrão) ou Semestral. O select deve listar Anual primeiro.
 - **Taxa**: 10% a.a. fixa, campo `readonly`, não editável.
 - **Não há pagamento separado de carência** — a 1ª parcela paga amortização + juros acumulados de toda a carência.
