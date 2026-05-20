@@ -460,11 +460,12 @@ for (let i = 0; i < nParcelas; i++) {
 }
 ```
 
-### Carência (Pronamp CE)
-- Selecionável: 3 a 18 meses, padrão 12 meses
-- Primeiro vencimento: dia 15 (ou próximo dia útil), `mesesCar` meses após a data da simulação
-- **Não há pagamento separado de carência** — a 1ª parcela paga amortização + juros acumulados de toda a carência
-- Prazo máximo total: 96 meses contando do dia da simulação até o último vencimento
+### Campos de entrada (Pronamp CE)
+- **Carência**: selecionável 3–18 meses, padrão 12 meses. Primeiro vencimento = dia 15 (ou próximo dia útil), `mesesCar` meses após a data da simulação.
+- **Prazo da Operação**: selecionável 2–8 anos, padrão 8 anos. Define o prazo máximo total (carência + parcelas). O nº de parcelas é calculado automaticamente.
+- **Periodicidade**: Anual (padrão) ou Semestral. O select deve listar Anual primeiro.
+- **Taxa**: 10% a.a. fixa, campo `readonly`, não editável.
+- **Não há pagamento separado de carência** — a 1ª parcela paga amortização + juros acumulados de toda a carência.
 
 ### CET com fluxo esparso (periodicidade não-mensal)
 Para simuladores com pagamentos semestrais ou anuais, o fluxo para o CET é indexado por mês com zeros nos meses sem pagamento:

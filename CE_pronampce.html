@@ -242,10 +242,15 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
       </div>
 
       <div class="field">
+        <label>Prazo da Operação</label>
+        <select id="selectPrazo"></select>
+      </div>
+
+      <div class="field">
         <label>Periodicidade</label>
         <select id="selectPeriodicidade">
-          <option value="6">Semestral (a cada 6 meses)</option>
           <option value="12">Anual (a cada 12 meses)</option>
+          <option value="6">Semestral (a cada 6 meses)</option>
         </select>
       </div>
 
@@ -372,14 +377,14 @@ const PROTECAO=[
 ];
 
 // ========= HELPER: nº de parcelas =========
-// Fórmula: floor((96 - carência) / período) + 1
-// Ex: carência=12, anual → floor(84/12)+1 = 8 parcelas com última em mês 96
-function calcNParcelas(mesesCar, periodoMeses){
-  return Math.floor((96-mesesCar)/periodoMeses)+1;
+// prazoMeses = prazo total da operação em meses (máx 96)
+// Fórmula: floor((prazoMeses - carência) / período) + 1
+function calcNParcelas(mesesCar, periodoMeses, prazoMeses){
+  return Math.floor((prazoMeses-mesesCar)/periodoMeses)+1;
 }
-// Prazo total = mês do último vencimento (carência + (n-1)*período)
-function calcPrazoTotal(mesesCar, periodoMeses){
-  let n=calcNParcelas(mesesCar,periodoMeses);
+// Prazo total efetivo = mês do último vencimento (≤ prazoMeses)
+function calcPrazoTotal(mesesCar, periodoMeses, prazoMeses){
+  let n=calcNParcelas(mesesCar,periodoMeses,prazoMeses);
   return mesesCar+(n-1)*periodoMeses;
 }
 
@@ -387,8 +392,9 @@ function calcPrazoTotal(mesesCar, periodoMeses){
 function atualizarStrip(){
   let mesesCar=parseInt(selectCarencia.value);
   let periodoMeses=parseInt(selectPeriodicidade.value);
-  let nParcelas=calcNParcelas(mesesCar,periodoMeses);
-  let prazoTotal=calcPrazoTotal(mesesCar,periodoMeses);
+  let prazoMeses=parseInt(selectPrazo.value)*12;
+  let nParcelas=calcNParcelas(mesesCar,periodoMeses,prazoMeses);
+  let prazoTotal=calcPrazoTotal(mesesCar,periodoMeses,prazoMeses);
   let labelPer=periodoMeses===6?"semestrais":"anuais";
   let data0=gerarData(new Date(),mesesCar);
   infoStrip.innerHTML=
@@ -405,13 +411,19 @@ window.onload=function(){
 
   // Popula carência: 3-18 meses, padrão 12
   for(let m=3;m<=18;m++){
-    let opt=new Option(m+" meses",m);
-    selectCarencia.add(opt);
+    selectCarencia.add(new Option(m+" meses",m));
   }
   selectCarencia.value=12;
 
+  // Popula prazo: 2-8 anos, padrão 8
+  for(let a=2;a<=8;a++){
+    selectPrazo.add(new Option(a+" anos",a));
+  }
+  selectPrazo.value=8;
+
   atualizarStrip();
   selectCarencia.onchange=atualizarStrip;
+  selectPrazo.onchange=atualizarStrip;
   selectPeriodicidade.onchange=atualizarStrip;
 
   percEntrada.oninput=()=>{
@@ -456,8 +468,9 @@ function simular(){
 
   let mesesCar=parseInt(selectCarencia.value);
   let periodoMeses=parseInt(selectPeriodicidade.value);
-  let nParcelas=calcNParcelas(mesesCar,periodoMeses);
-  let prazoTotal=calcPrazoTotal(mesesCar,periodoMeses);
+  let prazoMeses=parseInt(selectPrazo.value)*12;
+  let nParcelas=calcNParcelas(mesesCar,periodoMeses,prazoMeses);
+  let prazoTotal=calcPrazoTotal(mesesCar,periodoMeses,prazoMeses);
 
   let saldoInicial=round2(valorV-entrada);
   let amort=round2(saldoInicial/nParcelas);
