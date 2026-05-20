@@ -10,6 +10,8 @@ Exemplos do que deve ser salvo aqui:
 - Correções de fórmulas ou lógica descobertas em sessões anteriores
 - Padrões de UI/UX confirmados em produção
 
+**Regra crítica — não inventar restrições:** Nunca assumir limites, mínimos, máximos ou comportamentos que não foram especificados pelo usuário ou encontrados no Excel oficial. Se não há base, perguntar antes de implementar.
+
 ---
 
 ## Visão geral do projeto
@@ -56,6 +58,23 @@ Simuladores/
 - **Nunca** incluir "PME Máquinas" ou "PME Máquinas e Equipamentos" em nenhum texto visível, `<title>`, metadado ou comentário de código.
 - O nome institucional correto nos títulos é apenas **"Simuladores"** ou o nome do simulador específico.
 - Cor principal: `#1b3c6b` (azul escuro). Usar em headers, botões primários, cabeçalhos de tabela.
+
+### Ícones dos cards (index.html)
+
+Os ícones dos cards usam `fill:var(--blue)` — apenas formas sólidas, sem stroke. Para criar ícones reconhecíveis como silhuetas, sobrepor múltiplas formas simples (`<circle>`, `<rect>`, `<path>`) dentro do mesmo `<svg>`: como todas recebem o mesmo fill, as sobreposições se fundem num único blob de cor, formando a silhueta desejada.
+
+Ícones definidos por simulador:
+- **+Inovação** — prédio/construção: `<path d="M3 21V7l9-4 9 4v14H3zm2-2h4v-4H5v4zm6 0h4v-4h-4v4zm6 0h2v-4h-2v4zM5 13h4V9H5v4zm6 0h4V9h-4v4zm6 0h2V9h-2v4z"/>`
+- **Pronamp CE** — trator (silhueta composta):
+  ```html
+  <circle cx="15.5" cy="16.5" r="4.5"/>   <!-- roda traseira -->
+  <circle cx="5.5"  cy="17.5" r="2.5"/>   <!-- roda dianteira -->
+  <path d="M3 11.5h14v5H3z"/>             <!-- chassi -->
+  <path d="M9.5 6h6v6.5h-6z"/>            <!-- cabine -->
+  <path d="M3.5 9.5h7v3h-7z"/>            <!-- capô -->
+  <path d="M5 3.5h1.5v7H5z"/>             <!-- escapamento -->
+  ```
+- **CDC Campanha** — cifrão/dinheiro (existente no arquivo)
 
 ---
 
