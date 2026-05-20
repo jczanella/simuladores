@@ -331,14 +331,14 @@ function gerarData(base,mes){
   return proximoDiaUtil(d);
 }
 
-// ========= JUROS (dia útil exato, igual ao +Inovação) =========
+// ========= JUROS (fórmula idêntica ao Excel Pronamp CE, sem ROUND intermediário) =========
 function diasNoAno(data){
   let a=data.getFullYear();
   return (a%4===0&&(a%100!==0||a%400===0))?366:365;
 }
 function jurosPeriodo(saldo,taxaAnual,dias,dataRef){
   let dn=diasNoAno(dataRef);
-  let rate=Math.round((Math.pow(1+taxaAnual,dias/dn)-1)*1e6)/1e6;
+  let rate=Math.pow(1+taxaAnual,dias/dn)-1;
   return round2(saldo*rate);
 }
 
@@ -372,8 +372,15 @@ const PROTECAO=[
 ];
 
 // ========= HELPER: nº de parcelas =========
+// Fórmula: floor((96 - carência) / período) + 1
+// Ex: carência=12, anual → floor(84/12)+1 = 8 parcelas com última em mês 96
 function calcNParcelas(mesesCar, periodoMeses){
-  return Math.floor((96-mesesCar)/periodoMeses);
+  return Math.floor((96-mesesCar)/periodoMeses)+1;
+}
+// Prazo total = mês do último vencimento (carência + (n-1)*período)
+function calcPrazoTotal(mesesCar, periodoMeses){
+  let n=calcNParcelas(mesesCar,periodoMeses);
+  return mesesCar+(n-1)*periodoMeses;
 }
 
 // ========= ATUALIZA INFO STRIP =========
@@ -381,7 +388,7 @@ function atualizarStrip(){
   let mesesCar=parseInt(selectCarencia.value);
   let periodoMeses=parseInt(selectPeriodicidade.value);
   let nParcelas=calcNParcelas(mesesCar,periodoMeses);
-  let prazoTotal=mesesCar+nParcelas*periodoMeses;
+  let prazoTotal=calcPrazoTotal(mesesCar,periodoMeses);
   let labelPer=periodoMeses===6?"semestrais":"anuais";
   let data0=gerarData(new Date(),mesesCar);
   infoStrip.innerHTML=
@@ -450,7 +457,7 @@ function simular(){
   let mesesCar=parseInt(selectCarencia.value);
   let periodoMeses=parseInt(selectPeriodicidade.value);
   let nParcelas=calcNParcelas(mesesCar,periodoMeses);
-  let prazoTotal=mesesCar+nParcelas*periodoMeses;
+  let prazoTotal=calcPrazoTotal(mesesCar,periodoMeses);
 
   let saldoInicial=round2(valorV-entrada);
   let amort=round2(saldoInicial/nParcelas);
@@ -458,29 +465,26 @@ function simular(){
 
   tabela=[];
 
-  // fluxo esparso (índice = mês a partir de hoje) para CET
+  // fluxo esparso por mês para CET (índice = mês desde a liberação)
   let fluxo=new Array(prazoTotal+1).fill(0);
   fluxo[0]=-saldoInicial;
 
   let base=new Date();
+  // 1ª parcela: gerada a partir de hoje + mesesCar meses
   let data0=gerarData(base,mesesCar);
-  let dias0=Math.floor((data0-base)/86400000);
-  let j0=jurosPeriodo(saldo,TAXA_ANUAL,dias0,data0);
+  let anterior=base;
 
-  tabela.push([0,data0.toLocaleDateString("pt-BR"),saldo,0,j0,j0]);
-  fluxo[mesesCar]+=j0;
-
-  let anterior=data0;
-  for(let i=1;i<=nParcelas;i++){
-    let dataAtual=gerarData(data0,i*periodoMeses);
+  for(let i=0;i<nParcelas;i++){
+    // i=0 → data0 (primeira parcela, cobre toda a carência)
+    // i>0 → i períodos após data0
+    let dataAtual=(i===0)?data0:gerarData(data0,i*periodoMeses);
     let dias=Math.floor((dataAtual-anterior)/86400000);
     let juros=jurosPeriodo(saldo,TAXA_ANUAL,dias,dataAtual);
-    // ajuste final: última parcela absorve diferença de arredondamento
-    let amortI=(i===nParcelas)?round2(saldo):amort;
+    // última parcela absorve diferença de arredondamento
+    let amortI=(i===nParcelas-1)?round2(saldo):amort;
     let parcela=round2(juros+amortI);
-    tabela.push([i,dataAtual.toLocaleDateString("pt-BR"),saldo,amortI,juros,parcela]);
-    let idxMes=Math.min(mesesCar+i*periodoMeses,prazoTotal);
-    fluxo[idxMes]+=parcela;
+    tabela.push([i+1,dataAtual.toLocaleDateString("pt-BR"),saldo,amortI,juros,parcela]);
+    fluxo[mesesCar+i*periodoMeses]+=parcela;
     saldo=round2(saldo-amortI);
     anterior=dataAtual;
   }
@@ -495,7 +499,8 @@ function simular(){
 
   simParams={
     valorV,perc,entrada,saldoFin:saldoInicial,
-    mesesCar,periodoMeses,labelPer,nParcelas,prazoTotal,
+    mesesCar,periodoMeses,labelPer,nParcelas,
+    prazoTotal,  // = mesesCar + (nParcelas-1)*periodoMeses
     cetMensal:format2(cetMensal*100),cetAnual:format2(cetAnual*100),
     totAmort,totJuros,totValor
   };
@@ -522,12 +527,11 @@ function simular(){
     <tbody>`;
 
   tabela.forEach(r=>{
-    let cls=r[0]===0?'carencia':'';
-    html+=`<tr class="${cls}">
-      <td>${r[0]===0?'Car.':r[0]}</td>
+    html+=`<tr>
+      <td>${r[0]}</td>
       <td>${r[1]}</td>
       <td>${format2(r[2])}</td>
-      <td>${r[3]===0?'—':format2(r[3])}</td>
+      <td>${format2(r[3])}</td>
       <td>${format2(r[4])}</td>
       <td><strong>${format2(r[5])}</strong></td>
     </tr>`;
@@ -633,10 +637,10 @@ function gerarPDF(){
   const head=[["#","Data","Saldo Devedor\n(R$)","Amortização\n(R$)","Juros\n(R$)","Valor Parcela\n(R$)"]];
 
   const rows=tabela.map(r=>[
-    r[0]===0?"Car.":String(r[0]),
+    String(r[0]),
     r[1],
     format2(r[2]),
-    r[3]===0?"—":format2(r[3]),
+    format2(r[3]),
     format2(r[4]),
     format2(r[5])
   ]);
@@ -682,10 +686,6 @@ function gerarPDF(){
     alternateRowStyles:{fillColor:[248,249,252]},
     didParseCell:function(data){
       if(data.section==="body"){
-        if(data.row.index===0){
-          data.cell.styles.fillColor=[255,251,234];
-          data.cell.styles.textColor=[122,92,0];
-        }
         if(data.row.index===rows.length-1){
           data.cell.styles.fillColor=BLUE;
           data.cell.styles.textColor=WHITE;
