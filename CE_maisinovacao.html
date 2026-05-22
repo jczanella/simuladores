@@ -250,7 +250,7 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 
       <div class="field">
         <label>Taxa a.m. (%)</label>
-        <p id="displayMes" style="font-weight:600;color:var(--blue);font-size:1rem;margin:4px 0 0;padding:8px 12px;background:var(--blue-pale);border-radius:8px;border:1px solid var(--border);"></p>
+        <select id="selectMes"></select>
       </div>
 
     </div>
@@ -292,17 +292,28 @@ function mask(el){
 function aaParaAm(aa){return Math.pow(1+aa,1/12)-1;}
 function amParaAa(am){return Math.pow(1+am,12)-1;}
 
-const TAXA_AA=0.1598;
+const TAXAS_AA=[0.126,0.1598];
 
-let taxaMensalReal=aaParaAm(TAXA_AA);
-let taxaAnualReal=TAXA_AA;
+let taxaMensalReal=aaParaAm(0.126);
+let taxaAnualReal=0.126;
 
 // ========= INIT =========
 window.onload=function(){
   mask(valor);
   mask(valorEntrada);
 
-  displayMes.textContent=format2(taxaMensalReal*100)+'% a.m.';
+  TAXAS_AA.forEach((aa,i)=>{
+    selectMes.add(new Option(format2(aaParaAm(aa)*100)+'% a.m.',i));
+  });
+
+  function applyTaxa(idx){
+    taxaAnualReal=TAXAS_AA[idx];
+    taxaMensalReal=aaParaAm(taxaAnualReal);
+    selectMes.selectedIndex=idx;
+  }
+  applyTaxa(0);
+
+  selectMes.onchange=()=>applyTaxa(parseInt(selectMes.value));
 
   percEntrada.oninput=()=>{
     let p=parseFloat(percEntrada.value);
