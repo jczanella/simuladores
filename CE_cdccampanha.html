@@ -239,7 +239,7 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 
       <div class="field">
         <label>Entrada (%)</label>
-        <input id="percEntrada" type="number" min="0" max="100">
+        <input id="percEntrada" type="text" inputmode="decimal">
       </div>
 
       <div class="field">
@@ -291,6 +291,12 @@ function round2(v){return Math.round(v*100)/100;}
 function trunc2(v){return Math.trunc(v*100)/100;}
 function trunc8(v){return Math.trunc(v*1e8)/1e8;}
 function format2(v){return v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function parsePerc(v){return parseFloat((v||'').replace(',','.'))||0;}
+function formatPerc(v){
+  let r=Math.round(v*100)/100;
+  if(r%1===0) return String(Math.round(r));
+  return r.toFixed(2).replace(/0+$/,'').replace('.',',');
+}
 
 function mask(el){
   el.addEventListener("input",()=>{
@@ -316,9 +322,9 @@ function setModal(m){
 
   // Se Pesados e % atual < 50: ajustar para 50
   if(m==='pesados'){
-    let p=parseFloat(percEntrada.value);
+    let p=parsePerc(percEntrada.value);
     if(isNaN(p)||p<50){
-      percEntrada.value=50;
+      percEntrada.value=formatPerc(50);
       let v=parseBR(valor.value);
       if(v) valorEntrada.value=format2(v*0.5);
     }
@@ -405,17 +411,22 @@ window.onload=function(){
   atualizarTaxa();
 
   percEntrada.oninput=()=>{
-    let p=parseFloat(percEntrada.value);
-    if(p>100){percEntrada.value=100;p=100;}
+    let raw=percEntrada.value.replace(/[^0-9,]/g,'');
+    let parts=raw.split(',');
+    if(parts.length>2) raw=parts[0]+','+parts.slice(1).join('');
+    if(parts.length===2&&parts[1].length>2) raw=parts[0]+','+parts[1].slice(0,2);
+    if(percEntrada.value!==raw) percEntrada.value=raw;
+    let p=parsePerc(raw);
+    if(p>100){percEntrada.value='100';p=100;}
     let v=parseBR(valor.value);
     if(!v||isNaN(p))return;
     valorEntrada.value=format2(v*p/100);
   };
   percEntrada.onblur=()=>{
-    let p=parseFloat(percEntrada.value);
-    if(isNaN(p))return;
-    p=Math.min(Math.max(Math.round(p),0),100);
-    percEntrada.value=p;
+    let p=parsePerc(percEntrada.value);
+    if(percEntrada.value===''||isNaN(p))return;
+    p=Math.min(Math.max(Math.round(p*100)/100,0),100);
+    percEntrada.value=formatPerc(p);
     let v=parseBR(valor.value);
     if(v) valorEntrada.value=format2(v*p/100);
   };
@@ -423,14 +434,15 @@ window.onload=function(){
     let v=parseBR(valor.value);
     let e=parseBR(valorEntrada.value);
     if(!v||!e){percEntrada.value='';return;}
-    percEntrada.value=Math.min(Math.round(e/v*100),100);
+    let p=Math.min(Math.round(e/v*10000)/100,100);
+    percEntrada.value=formatPerc(p);
   };
   valorEntrada.onblur=()=>{
     let v=parseBR(valor.value);
     let e=parseBR(valorEntrada.value);
     if(!v||!e)return;
-    let p=Math.min(Math.round(e/v*100),100);
-    percEntrada.value=p;
+    let p=Math.min(Math.round(e/v*10000)/100,100);
+    percEntrada.value=formatPerc(p);
     valorEntrada.value=format2(v*p/100);
   };
 };
@@ -441,7 +453,7 @@ function simular(){
   if(!valorV){alert("Informe o valor do bem.");return;}
 
   let entMin=ENTRADA_MIN[modalAtual];
-  let perc=Math.round(parseFloat(percEntrada.value||0));
+  let perc=Math.min(Math.max(Math.round(parsePerc(percEntrada.value||'0')*100)/100,0),100);
 
   let erroEl=document.getElementById('erroEntrada');
   if(perc<entMin){
@@ -451,10 +463,9 @@ function simular(){
   }
   erroEl.style.display='none';
 
-  perc=Math.min(perc,100);
   let entrada=round2(valorV*perc/100);
   valorEntrada.value=format2(entrada);
-  percEntrada.value=perc;
+  percEntrada.value=formatPerc(perc);
 
   let prazoV=parseInt(prazo.value);
   let taxa=TAXAS_PRAZO[prazoV];
