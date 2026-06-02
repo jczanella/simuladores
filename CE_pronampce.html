@@ -12,6 +12,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SF443XR798"></script>
+<script>
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','G-SF443XR798');
+</script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -469,6 +476,7 @@ window.onload=function(){
 
 // ========= SIMULAÇÃO =========
 function simular(){
+  gtag('event','simular',{simulador:document.title});
   let valorV=parseBR(valor.value);
   if(!valorV){alert("Informe o Valor do Bem.");return;}
   let perc=Math.round(parseFloat(percEntrada.value||0));
@@ -585,6 +593,7 @@ function simular(){
 // ========= PDF =========
 function gerarPDF(){
   if(!tabela.length){alert("Simule primeiro.");return;}
+  gtag('event','gerar_pdf',{simulador:document.title});
 
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
