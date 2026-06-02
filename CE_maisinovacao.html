@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -467,18 +467,23 @@ function simular(){
   let totJuros=round2(tabela.reduce((a,r)=>a+r[4],0));
   let totValor=round2(tabela.reduce((a,r)=>a+r[5],0));
 
+  let parcelaInicial=tabela[1][5];
+  let parcelaFinal=tabela[tabela.length-1][5];
+  let parcelaMedia=round2(tabela.slice(1).reduce((a,r)=>a+r[5],0)/(tabela.length-1));
+
   simParams={valorV,perc,entrada,prazoV,parcelas,saldoFin:round2(valorV-entrada),
     taxaMes:format2(taxaMensalReal*100),taxaAno:format2(taxaAnualReal*100),
     cetMensal:format2(cetMensal*100),cetAnual:format2(cetAnual*100),
-    totAmort,totJuros,totValor};
+    totAmort,totJuros,totValor,parcelaInicial,parcelaFinal,parcelaMedia};
 
   // ── HTML ──
   let html=`
   <div class="cet-banner">
     <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${format2(cetMensal*100)}% a.m.</span></div>
     <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${format2(cetAnual*100)}% a.a.</span></div>
-    <div class="cet-item"><span class="cet-label">Total de Juros</span><span class="cet-value">R$ ${format2(totJuros)}</span></div>
-    <div class="cet-item"><span class="cet-label">Total Pago</span><span class="cet-value">R$ ${format2(totValor)}</span></div>
+    <div class="cet-item"><span class="cet-label">1ª Parcela</span><span class="cet-value">R$ ${format2(parcelaInicial)}</span></div>
+    <div class="cet-item"><span class="cet-label">Última Parcela</span><span class="cet-value">R$ ${format2(parcelaFinal)}</span></div>
+    <div class="cet-item"><span class="cet-label">Parcela Média</span><span class="cet-value">R$ ${format2(parcelaMedia)}</span></div>
   </div>
   <div class="table-wrap">
   <table>
@@ -576,8 +581,9 @@ function gerarPDF(){
     ["Taxa de Juros",      `${p.taxaMes}% a.m.  |  ${p.taxaAno}% a.a.`],
     ["CET",                `${p.cetMensal}% a.m.  |  ${p.cetAnual}% a.a.`],
     ["TAC",                "R$ 1.400,00"],
-    ["Total de Juros",     `R$ ${format2(p.totJuros)}`],
-    ["Total Pago",         `R$ ${format2(p.totValor)}`],
+    ["1ª Parcela",       `R$ ${format2(p.parcelaInicial)}`],
+    ["Última Parcela",    `R$ ${format2(p.parcelaFinal)}`],
+    ["Parcela Média",     `R$ ${format2(p.parcelaMedia)}`],
   ];
   const colW=(W-20)/4;
   campos.forEach(([lbl,val],i)=>{
