@@ -530,6 +530,7 @@ function simular(){
 
   simParams={
     valorV,perc,entrada,saldoFin:saldoInicial,
+    prazoAnos:parseInt(selectPrazo.value),
     mesesCar,periodoMeses,labelPer,nParcelas,
     prazoTotal,  // = mesesCar + (nParcelas-1)*periodoMeses
     cetMensal:format2(cetMensal*100),cetAnual:format2(cetAnual*100),
@@ -761,7 +762,11 @@ function gerarPDF(){
     ty+=3.4;
   });
 
-  doc.save("Simulacao_PronampCE.pdf");
+  function fmtK(v){
+    if(v>=1000000){let m=v/1000000;return(m%1===0?String(Math.round(m)):m.toFixed(1).replace('.',','))+' mi';}
+    let k=v/1000;return(k%1===0?String(Math.round(k)):k.toFixed(1).replace('.',','))+' mil';
+  }
+  doc.save(`Pronamp CE ${fmtK(p.valorV)} ${p.perc}% ${p.prazoAnos} anos.pdf`);
 }
 
 </script>
