@@ -724,7 +724,11 @@ function gerarPDF(){
     ty+=3.4;
   });
 
-  doc.save("Simulacao_MaisInovacao.pdf");
+  function fmtK(v){
+    if(v>=1000000){let m=v/1000000;return(m%1===0?String(Math.round(m)):m.toFixed(1).replace('.',','))+' mi';}
+    let k=v/1000;return(k%1===0?String(Math.round(k)):k.toFixed(1).replace('.',','))+' mil';
+  }
+  doc.save(`+Inovação ${fmtK(p.valorV)} ${p.perc}% ${p.prazoV}x.pdf`);
 }
 
 </script>
