@@ -443,7 +443,7 @@ function simular(){
   let amort=round2(saldo/parcelas);
 
   tabela=[];
-  fluxo=[-saldo];
+  let saldoInicial=saldo;
 
   let base=new Date();
   let anterior=new Date(base);
@@ -454,7 +454,6 @@ function simular(){
   let j0=jurosPeriodo(saldo,taxaAnualReal,dias0,data0);
 
   tabela.push([0,data0.toLocaleDateString("pt-BR"),saldo,0,j0,j0]);
-  fluxo.push(j0);
   anterior=data0;
 
   for(let i=1;i<=parcelas;i++){
@@ -463,10 +462,16 @@ function simular(){
     let juros=jurosPeriodo(saldo,taxaAnualReal,dias,dataAtual);
     let parcela=round2(juros+amort);
     tabela.push([i,dataAtual.toLocaleDateString("pt-BR"),saldo,amort,juros,parcela]);
-    fluxo.push(parcela);
     saldo=round2(saldo-amort);
     anterior=dataAtual;
   }
+
+  // Fluxo com índices de mês corretos: pagamentos nos meses reais, zeros nos outros
+  let totalMeses=mesesCarencia+parcelas;
+  fluxo=new Array(totalMeses+1).fill(0);
+  fluxo[0]=-saldoInicial;
+  fluxo[mesesCarencia]=j0;
+  for(let i=1;i<=parcelas;i++) fluxo[mesesCarencia+i]=tabela[i][5];
 
   let cetMensal=calcularCET(fluxo);
   let cetAnual=Math.pow(1+cetMensal,12)-1;
