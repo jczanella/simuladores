@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador CDC Balcão</title>
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b3c6b">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SF443XR798"></script>
+<script>
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','G-SF443XR798');
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --blue:#1b3c6b;
+  --blue-light:#2451a0;
+  --blue-pale:#e8eef7;
+  --bg:#f5f7fa;
+  --card:#ffffff;
+  --text:#1a1a2e;
+  --text-soft:#5a6377;
+  --border:#dde3ed;
+  --radius:14px;
+  --shadow:0 2px 8px rgba(27,60,107,.10);
+}
+
+body{
+  font-family:'Inter',Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding-bottom:48px;
+}
+
+header{
+  background:var(--blue);
+  color:#fff;
+  padding:20px 20px 18px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.header-text h1{font-size:1.1rem;font-weight:700;letter-spacing:.2px;}
+.header-text p{font-size:.78rem;opacity:.72;margin-top:3px;}
+
+main{max-width:900px;margin:0 auto;padding:28px 16px 0;}
+
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:22px 20px;
+  margin-bottom:20px;
+}
+.card-title{
+  font-size:.75rem;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  color:var(--text-soft);
+  margin-bottom:16px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+
+/* ── FORM ── */
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:14px;
+}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{
+  font-size:.72rem;font-weight:600;
+  letter-spacing:.4px;text-transform:uppercase;
+  color:var(--text-soft);
+}
+.field input,.field select{
+  padding:9px 11px;
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  font-family:inherit;font-size:.93rem;
+  color:var(--text);background:#fff;
+  outline:none;transition:border-color .15s;width:100%;
+}
+.field input:focus,.field select:focus{border-color:var(--blue);}
+
+.taxa-info{
+  padding:9px 11px;
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  font-size:.93rem;
+  color:var(--blue);font-weight:600;
+  background:var(--blue-pale);
+}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:10px 20px;
+  border:none;border-radius:8px;
+  font-family:inherit;font-size:.88rem;font-weight:600;
+  cursor:pointer;transition:all .15s;text-decoration:none;
+}
+.btn-primary{background:var(--blue);color:#fff;}
+.btn-primary:hover{background:var(--blue-light);}
+.btn-secondary{background:var(--bg);color:var(--blue);border:1.5px solid var(--border);}
+.btn-secondary:hover{background:var(--blue-pale);border-color:var(--blue);}
+.btn-ghost{background:transparent;color:rgba(255,255,255,.8);border:1.5px solid rgba(255,255,255,.3);margin-left:auto;}
+.btn-ghost:hover{background:rgba(255,255,255,.1);color:#fff;}
+.btn svg{width:16px;height:16px;fill:currentColor;}
+
+#resultado{margin-top:4px;}
+
+/* ── BANNER ── */
+.cet-banner{
+  background:var(--blue-pale);border:1px solid #c3d1e8;
+  border-radius:10px;padding:12px 18px;
+  display:flex;align-items:center;gap:18px;
+  margin-bottom:18px;flex-wrap:wrap;
+}
+.cet-item{display:flex;flex-direction:column;gap:2px;}
+.cet-label{font-size:.68rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--text-soft);}
+.cet-value{font-size:1.05rem;font-weight:700;color:var(--blue);}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{
+  width:100%;border-collapse:collapse;
+  background:#fff;font-size:.83rem;
+  font-variant-numeric:tabular-nums;
+}
+thead th{
+  background:var(--blue);color:#fff;
+  padding:9px 12px;text-align:right;
+  font-size:.72rem;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+  white-space:nowrap;
+}
+thead th:first-child{text-align:center;width:52px;}
+thead th:nth-child(2){text-align:left;}
+
+tbody tr:nth-child(even){background:#f8f9fc;}
+tbody td{padding:7px 12px;text-align:right;border-bottom:1px solid #eef0f5;color:var(--text);}
+tbody td:first-child{text-align:center;color:var(--text-soft);font-size:.78rem;width:52px;}
+tbody td:nth-child(2){text-align:left;}
+tbody tr:hover{background:var(--blue-pale);}
+
+tfoot tr{background:var(--blue);}
+tfoot td{
+  padding:9px 12px;text-align:right;
+  color:#fff;font-weight:700;font-size:.83rem;
+  font-variant-numeric:tabular-nums;
+}
+tfoot td:first-child{text-align:center;width:52px;font-weight:400;opacity:.8;}
+tfoot td:nth-child(2){text-align:left;font-weight:400;opacity:.8;}
+tfoot td:nth-child(3){opacity:.8;font-weight:400;}
+
+/* ── PROTEÇÃO ── */
+.protecao{
+  margin-top:18px;background:#fff;
+  border:1px solid var(--border);border-radius:10px;padding:14px 16px;
+}
+.protecao p{font-size:.72rem;color:var(--text-soft);line-height:1.6;margin-bottom:4px;}
+.protecao p:last-child{margin-bottom:0;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-text">
+    <h1>Simulador CDC Balcão</h1>
+    <p>CDC Genérico · Sistema Price com IOF</p>
+  </div>
+  <a href="index.html" class="btn btn-ghost" style="padding:8px 14px;font-size:.82rem;">
+    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    Voltar ao Início
+  </a>
+</header>
+
+<main>
+
+  <!-- ── FORMULÁRIO ── -->
+  <div class="card">
+    <div class="card-title">Parâmetros da Simulação</div>
+
+    <div class="form-grid">
+
+      <div class="field">
+        <label>Valor do Bem (R$)</label>
+        <input id="valor" placeholder="0">
+      </div>
+
+      <div class="field">
+        <label>Entrada (%)</label>
+        <input id="percEntrada" type="text" inputmode="decimal" placeholder="0">
+      </div>
+
+      <div class="field">
+        <label>Entrada (R$)</label>
+        <input id="valorEntrada" placeholder="0">
+      </div>
+
+      <div class="field">
+        <label>Prazo (meses)</label>
+        <select id="prazo">
+          <option value="6">6 meses</option>
+          <option value="12" selected>12 meses</option>
+          <option value="24">24 meses</option>
+          <option value="36">36 meses</option>
+          <option value="48">48 meses</option>
+          <option value="60">60 meses</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Taxa de Juros</label>
+        <div class="taxa-info">1,52% a.m. / 19,92% a.a.</div>
+      </div>
+
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="simular()">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+        Simular
+      </button>
+      <button class="btn btn-secondary" onclick="gerarPDF()">
+        <svg viewBox="0 0 24 24"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>
+        Gerar PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ── RESULTADO ── -->
+  <div id="resultado"></div>
+
+</main>
+
+<script>
+
+// ========= UTIL =========
+function parseBR(v){return Number((v||"").replace(/\./g,"").replace(",",".")||0);}
+function round2(v){return Math.round(v*100)/100;}
+function trunc2(v){return Math.trunc(v*100)/100;}
+function trunc8(v){return Math.trunc(v*1e8)/1e8;}
+function format2(v){return v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function parsePerc(v){return parseFloat((v||'').replace(',','.'))||0;}
+function formatPerc(v){
+  let r=Math.round(v*100)/100;
+  if(r%1===0) return String(Math.round(r));
+  return r.toFixed(2).replace(/0+$/,'').replace('.',',');
+}
+
+function mask(el){
+  el.addEventListener("input",()=>{
+    let raw=el.value.replace(/\D/g,"");
+    if(!raw){el.value="";return;}
+    el.value=Number(raw).toLocaleString("pt-BR");
+  });
+}
+
+// ========= CONSTANTES =========
+const TAXA = 0.0152;  // 1,52% a.m. fixa
+
+// ========= PMT (Price — parcelas iguais) =========
+function calcPMT(pv,i,n){
+  if(i===0) return pv/n;
+  return pv*i/(1-Math.pow(1+i,-n));
+}
+
+// ========= IOF (replica fórmula exata do Excel do banco) =========
+// Alíquota diária: 0,0082% a.d.
+// Base de cálculo: ano comercial (30 dias/mês), capped em 360 dias
+// IOF = TRUNC(AC21 + AC22, 2) onde:
+//   AC21 = base × TRUNC(R30 / (base − R30), 8)
+//   AC22 = TRUNC(base × TRUNC(0.0038/0.9962, 8), 2)
+//   R30  = Σ amort_i × 0.000082 × min(i×30, 360)
+function calcularIOF(base,taxa,n){
+  const DIARIA=0.000082;
+  const ADICIONAL=0.0038;
+
+  const pmt_base=taxa===0 ? base*(1/n) : base*taxa/(1-Math.pow(1+taxa,-n));
+
+  let R30=0;
+  let saldo=base;
+  for(let i=1;i<=n;i++){
+    const juros=round2(saldo*taxa);
+    const amort=pmt_base-juros;
+    const dias=Math.min(i*30,360);
+    R30+=amort*DIARIA*dias;
+    saldo=round2(saldo-round2(amort));
+  }
+
+  const AB21=trunc8(R30/(base-R30));
+  const AC21=base*AB21;
+  const AB22=trunc8(ADICIONAL/(1-ADICIONAL));
+  const AC22=trunc2(base*AB22);
+  return trunc2(AC21+AC22);
+}
+
+// ========= CET (TIR — Newton-Raphson) =========
+function calcularCET(fluxo){
+  let taxa=0.01;
+  for(let k=0;k<200;k++){
+    let f=0,df=0;
+    for(let t=0;t<fluxo.length;t++){
+      f+=fluxo[t]/Math.pow(1+taxa,t);
+      df+=-t*fluxo[t]/Math.pow(1+taxa,t+1);
+    }
+    if(Math.abs(df)<1e-12) break;
+    let nt=taxa-f/df;
+    if(Math.abs(nt-taxa)<1e-9) break;
+    taxa=nt;
+  }
+  return taxa;
+}
+
+// ========= ESTADO GLOBAL =========
+let tabela=[], fluxo=[];
+let simParams={};
+
+const PROTECAO=[
+  "a) O fluxo apresenta valores aproximados, que poderão variar de acordo com cada operação. Os valores apresentados não são vinculativos.",
+  "b) Simulação sujeita a aprovação de crédito conforme política do Agente Financeiro.",
+];
+
+// ========= INIT =========
+window.onload=function(){
+  mask(valor);
+  mask(valorEntrada);
+
+  percEntrada.oninput=()=>{
+    let raw=percEntrada.value.replace(/[^0-9,]/g,'');
+    let parts=raw.split(',');
+    if(parts.length>2) raw=parts[0]+','+parts.slice(1).join('');
+    if(parts.length===2&&parts[1].length>2) raw=parts[0]+','+parts[1].slice(0,2);
+    if(percEntrada.value!==raw) percEntrada.value=raw;
+    let p=parsePerc(raw);
+    if(p>100){percEntrada.value='100';p=100;}
+    let v=parseBR(valor.value);
+    if(!v||isNaN(p))return;
+    valorEntrada.value=format2(v*p/100);
+  };
+  percEntrada.onblur=()=>{
+    let p=parsePerc(percEntrada.value);
+    if(percEntrada.value===''||isNaN(p))return;
+    p=Math.min(Math.max(Math.round(p*100)/100,0),100);
+    percEntrada.value=formatPerc(p);
+    let v=parseBR(valor.value);
+    if(v) valorEntrada.value=format2(v*p/100);
+  };
+  valorEntrada.oninput=()=>{
+    let v=parseBR(valor.value);
+    let e=parseBR(valorEntrada.value);
+    if(!v||!e){percEntrada.value='';return;}
+    let p=Math.min(Math.round(e/v*10000)/100,100);
+    percEntrada.value=formatPerc(p);
+  };
+  valorEntrada.onblur=()=>{
+    let v=parseBR(valor.value);
+    let e=parseBR(valorEntrada.value);
+    if(!v||!e)return;
+    let p=Math.min(Math.round(e/v*10000)/100,100);
+    percEntrada.value=formatPerc(p);
+    valorEntrada.value=format2(v*p/100);
+  };
+};
+
+// ========= SIMULAÇÃO =========
+function simular(){
+  gtag('event','simular',{simulador:document.title});
+  let valorV=parseBR(valor.value);
+  if(!valorV){alert("Informe o valor do bem.");return;}
+
+  let perc=Math.min(Math.max(Math.round(parsePerc(percEntrada.value||'0')*100)/100,0),100);
+  let entrada=round2(valorV*perc/100);
+  valorEntrada.value=format2(entrada);
+  percEntrada.value=formatPerc(perc);
+
+  let saldoFin=round2(valorV-entrada);
+  if(saldoFin<=0){alert("O saldo financiado deve ser maior que zero.");return;}
+
+  let prazoV=parseInt(prazo.value);
+  let iof=calcularIOF(saldoFin,TAXA,prazoV);
+  let total=round2(saldoFin+iof);
+  let pmt=round2(calcPMT(total,TAXA,prazoV));
+
+  tabela=[];
+  fluxo=[-saldoFin];  // CET: cliente recebe saldoFin; IOF é custo financiado
+
+  let baseDate=new Date();
+  let saldo=total;
+
+  for(let i=1;i<=prazoV;i++){
+    let dataAtual=new Date(baseDate.getFullYear(),baseDate.getMonth()+i,baseDate.getDate());
+    let juros=round2(saldo*TAXA);
+    let amort,parcela;
+    if(i<prazoV){
+      amort=round2(pmt-juros);
+      parcela=pmt;
+    } else {
+      amort=saldo;
+      parcela=round2(amort+juros);
+    }
+    tabela.push([i,dataAtual.toLocaleDateString("pt-BR"),saldo,amort,juros,parcela]);
+    fluxo.push(parcela);
+    saldo=round2(saldo-amort);
+  }
+
+  let taxaAa=Math.pow(1+TAXA,12)-1;
+  let cetMensal=calcularCET(fluxo);
+  let cetAnual=Math.pow(1+cetMensal,12)-1;
+
+  let totAmort=round2(tabela.reduce((a,r)=>a+r[3],0));
+  let totJuros=round2(tabela.reduce((a,r)=>a+r[4],0));
+  let totValor=round2(tabela.reduce((a,r)=>a+r[5],0));
+
+  simParams={valorV,perc,entrada,prazoV,saldoFin,iof,total,
+    taxaMes:format2(TAXA*100),taxaAa:format2(taxaAa*100),
+    cetMensal:format2(cetMensal*100),cetAnual:format2(cetAnual*100),
+    pmt,totAmort,totJuros,totValor};
+
+  // ── HTML RESULTADO ──
+  let html=`
+  <div class="cet-banner">
+    <div class="cet-item"><span class="cet-label">Parcela</span><span class="cet-value">R$ ${format2(pmt)}</span></div>
+    <div class="cet-item"><span class="cet-label">IOF</span><span class="cet-value">R$ ${format2(iof)}</span></div>
+    <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${format2(cetMensal*100)}% a.m.</span></div>
+    <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${format2(cetAnual*100)}% a.a.</span></div>
+    <div class="cet-item"><span class="cet-label">Total Pago</span><span class="cet-value">R$ ${format2(totValor)}</span></div>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Data</th>
+        <th>Saldo Devedor</th>
+        <th>Amortização</th>
+        <th>Juros</th>
+        <th>Valor Parcela</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  tabela.forEach(r=>{
+    html+=`<tr>
+      <td>${r[0]}</td>
+      <td>${r[1]}</td>
+      <td>${format2(r[2])}</td>
+      <td>${format2(r[3])}</td>
+      <td>${format2(r[4])}</td>
+      <td><strong>${format2(r[5])}</strong></td>
+    </tr>`;
+  });
+
+  html+=`
+    </tbody>
+    <tfoot>
+      <tr>
+        <td>—</td>
+        <td>TOTAL</td>
+        <td>—</td>
+        <td>${format2(totAmort)}</td>
+        <td>${format2(totJuros)}</td>
+        <td>${format2(totValor)}</td>
+      </tr>
+    </tfoot>
+  </table>
+  </div>
+  <div class="protecao">`;
+
+  PROTECAO.forEach(t=>{html+=`<p>${t}</p>`;});
+  html+=`</div>`;
+
+  resultado.innerHTML=html;
+}
+
+// ========= PDF =========
+function gerarPDF(){
+  if(!tabela.length){alert("Simule primeiro.");return;}
+  gtag('event','gerar_pdf',{simulador:document.title});
+
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+  const W=doc.internal.pageSize.getWidth();
+  const H=doc.internal.pageSize.getHeight();
+  const BLUE=[27,60,107];
+  const WHITE=[255,255,255];
+  const GRAY=[90,99,119];
+  const now=new Date();
+  const p=simParams;
+
+  // ── FAIXA AZUL ──
+  doc.setFillColor(...BLUE);
+  doc.rect(0,0,W,8,"F");
+  doc.setFontSize(7);doc.setFont("helvetica","bold");doc.setTextColor(...WHITE);
+  doc.text("Simulador CDC Balcão  |  CDC Genérico",10,5.2);
+  doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(180,200,230);
+  doc.text(`Simulado em ${now.toLocaleDateString("pt-BR")} às ${now.toTimeString().slice(0,5)}`,W-10,5.2,{align:"right"});
+
+  // ── BLOCO DE PARÂMETROS ── (10 campos: 3 linhas × 4 colunas, última com 2)
+  let y=13;
+  doc.setFillColor(248,249,252);doc.setDrawColor(221,227,237);
+  doc.roundedRect(10,y,W-20,42,2,2,"FD");
+
+  doc.setFontSize(6.2);doc.setFont("helvetica","bold");doc.setTextColor(...GRAY);
+  doc.text("PARÂMETROS DA SIMULAÇÃO",14,y+5);
+
+  const campos=[
+    ["Valor do Bem",     `R$ ${format2(p.valorV)}`],
+    ["Entrada",          `${formatPerc(p.perc)}%  (R$ ${format2(p.entrada)})`],
+    ["Saldo Financiado", `R$ ${format2(p.saldoFin)}`],
+    ["IOF",              `R$ ${format2(p.iof)}`],
+    ["Total Financiado", `R$ ${format2(p.total)}`],
+    ["Prazo",            `${p.prazoV} meses`],
+    ["Taxa de Juros",    `${p.taxaMes}% a.m.  |  ${p.taxaAa}% a.a.`],
+    ["CET",              `${p.cetMensal}% a.m.  |  ${p.cetAnual}% a.a.`],
+    ["Valor da Parcela", `R$ ${format2(p.pmt)}`],
+    ["Total Pago",       `R$ ${format2(p.totValor)}`],
+  ];
+
+  const colW=(W-20)/4;
+  campos.forEach(([lbl,val],i)=>{
+    let cx=10+(i%4)*colW+3;
+    let cy=y+8+Math.floor(i/4)*11;
+    doc.setFontSize(6);doc.setFont("helvetica","normal");doc.setTextColor(...GRAY);
+    doc.text(lbl.toUpperCase(),cx,cy);
+    doc.setFontSize(7.5);doc.setFont("helvetica","bold");doc.setTextColor(15,20,45);
+    let lines=doc.splitTextToSize(val,colW-4);
+    doc.text(lines[0],cx,cy+4.5);
+  });
+
+  y+=46;
+
+  // ── TABELA ──
+  const marginL=10,marginR=10;
+  const tableW=W-marginL-marginR;
+  const colNum=10;
+  const colRest=(tableW-colNum)/5;
+
+  const head=[["#","Data","Saldo Devedor\n(R$)","Amortização\n(R$)","Juros\n(R$)","Valor Parcela\n(R$)"]];
+
+  const rows=tabela.map(r=>[
+    String(r[0]),r[1],
+    format2(r[2]),format2(r[3]),
+    format2(r[4]),
+    format2(r[5])
+  ]);
+
+  rows.push(["TOTAL","","—",format2(p.totAmort),format2(p.totJuros),format2(p.totValor)]);
+
+  doc.autoTable({
+    startY:y,head:head,body:rows,
+    margin:{left:marginL,right:marginR},
+    styles:{font:"helvetica",fontSize:6.8,cellPadding:1.8,textColor:[15,20,45],
+      lineColor:[221,227,237],lineWidth:0.15,overflow:"linebreak"},
+    headStyles:{fillColor:BLUE,textColor:WHITE,fontSize:6.2,fontStyle:"bold",
+      halign:"right",cellPadding:2,minCellHeight:0},
+    columnStyles:{
+      0:{halign:"center",cellWidth:colNum},
+      1:{halign:"left",  cellWidth:colRest},
+      2:{halign:"right", cellWidth:colRest},
+      3:{halign:"right", cellWidth:colRest},
+      4:{halign:"right", cellWidth:colRest},
+      5:{halign:"right", cellWidth:colRest,fontStyle:"bold"}
+    },
+    alternateRowStyles:{fillColor:[248,249,252]},
+    didParseCell:function(data){
+      if(data.section==="body"&&data.row.index===rows.length-1){
+        data.cell.styles.fillColor=BLUE;
+        data.cell.styles.textColor=WHITE;
+        data.cell.styles.fontStyle="bold";
+        data.cell.styles.fontSize=7.2;
+      }
+    }
+  });
+
+  // ── TEXTO DE PROTEÇÃO ──
+  let finalY=doc.lastAutoTable.finalY+5;
+  const maxTxtW=W-28;
+  doc.setFontSize(6.2);doc.setFont("helvetica","normal");
+  let textoLinhas=[];
+  PROTECAO.forEach(t=>{textoLinhas.push(...doc.splitTextToSize(t,maxTxtW),"");});
+  textoLinhas.pop();
+  let altBloco=textoLinhas.length*3.4+9;
+
+  if(finalY+altBloco>H-8){doc.addPage();finalY=12;}
+  doc.setFillColor(248,249,252);doc.setDrawColor(221,227,237);
+  doc.roundedRect(10,finalY,W-20,altBloco,2,2,"FD");
+  doc.setFontSize(6.2);doc.setFont("helvetica","bold");doc.setTextColor(...GRAY);
+  doc.text("INFORMAÇÕES IMPORTANTES",14,finalY+5);
+  doc.setFont("helvetica","normal");doc.setTextColor(70,80,100);
+  let ty=finalY+9.5;
+  textoLinhas.forEach(linha=>{
+    if(ty>H-10){doc.addPage();ty=12;}
+    doc.text(linha,14,ty);ty+=3.4;
+  });
+
+  function fmtK(v){
+    if(v>=1000000){let m=v/1000000;return(m%1===0?String(Math.round(m)):m.toFixed(1).replace('.',','))+' mi';}
+    let k=v/1000;return(k%1===0?String(Math.round(k)):k.toFixed(1).replace('.',','))+' mil';
+  }
+  doc.save(`CDC Balcão ${fmtK(p.valorV)} ${formatPerc(p.perc)}% ${p.prazoV}x.pdf`);
+}
+
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/simuladores/sw.js');
+  });
+}
+</script>
+</body>
+</html>
