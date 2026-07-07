@@ -213,7 +213,7 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 <header>
   <div class="header-text">
     <h1>Simulador Pronamp CE</h1>
-    <p>Linha CE / Construção BNDES · 10% a.a.</p>
+    <p>Linha CE / Construção BNDES · 9% a.a.</p>
   </div>
   <a href="index.html" class="btn btn-ghost" style="padding:8px 14px;font-size:.82rem;">
     <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
@@ -263,7 +263,7 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 
       <div class="field">
         <label>Taxa de Juros</label>
-        <input value="10,00% a.a." readonly>
+        <input value="9,00% a.a." readonly>
       </div>
 
     </div>
@@ -305,7 +305,7 @@ function mask(el){
 }
 
 // ========= TAXA FIXA =========
-const TAXA_ANUAL = 0.10;
+const TAXA_ANUAL = 0.09;
 
 // ========= FERIADOS (2026-2031) =========
 const FERIADOS=new Set([
@@ -633,7 +633,7 @@ function gerarPDF(){
     ["Valor do Bem",      `R$ ${format2(p.valorV)}`],
     ["Entrada",           `${p.perc}%  (R$ ${format2(p.entrada)})`],
     ["Saldo Financiado",  `R$ ${format2(p.saldoFin)}`],
-    ["Taxa de Juros",     "10,00% a.a. (Pronamp CE)"],
+    ["Taxa de Juros",     "9,00% a.a. (Pronamp CE)"],
     ["Carência",          `${p.mesesCar} meses`],
     ["Periodicidade",     p.labelPer],
     ["Nº de Parcelas",    `${p.nParcelas} parcelas`],
