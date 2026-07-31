@@ -292,8 +292,13 @@ function mask(el){
 const TAXA_ANUAL = 0.092;
 
 // ========= PRAZO FIXO (sem carência selecionável — comunicado: sem carência, parcelas anuais) =========
-const MESES_CARENCIA = 12;   // 1ª parcela = próximo dia 15 após 12 meses da data de hoje
-const PERIODO_MESES  = 12;   // parcelas anuais
+// 1ª parcela = "próximo dia 15" a partir de hoje, + 12 meses (mesma regra do exemplo do comunicado:
+// despacho 10/08/2026 → 1ª reposição 15/08/2027). Se hoje já passou do dia 15, o "próximo dia 15"
+// cai no mês seguinte — por isso soma-se 1 mês a mais (13) para compensar, igual à lógica do +Inovação.
+function calcMesesCarencia(base){
+  return base.getDate() < 16 ? 12 : 13;
+}
+const PERIODO_MESES = 12;   // parcelas anuais
 
 // ========= FERIADOS (2026-2031) =========
 const FERIADOS=new Set([
@@ -371,8 +376,9 @@ const PROTECAO=[
 // ========= ATUALIZA INFO STRIP =========
 function atualizarStrip(){
   let nParcelas=parseInt(selectPrazo.value);
-  let prazoTotal=MESES_CARENCIA+(nParcelas-1)*PERIODO_MESES;
-  let data0=gerarData(new Date(),MESES_CARENCIA);
+  let mesesCar=calcMesesCarencia(new Date());
+  let prazoTotal=mesesCar+(nParcelas-1)*PERIODO_MESES;
+  let data0=gerarData(new Date(),mesesCar);
   infoStrip.innerHTML=
     `<strong>${nParcelas} parcelas anuais</strong>`+
     `<span>1º vencimento: ${data0.toLocaleDateString("pt-BR")}</span>`+
@@ -434,7 +440,9 @@ function simular(){
   percEntrada.value=perc;
 
   let nParcelas=parseInt(selectPrazo.value);
-  let prazoTotal=MESES_CARENCIA+(nParcelas-1)*PERIODO_MESES;
+  let base=new Date();
+  let mesesCar=calcMesesCarencia(base);
+  let prazoTotal=mesesCar+(nParcelas-1)*PERIODO_MESES;
 
   let saldoInicial=round2(valorV-entrada);
   let amort=round2(saldoInicial/nParcelas);
@@ -446,8 +454,7 @@ function simular(){
   let fluxo=new Array(prazoTotal+1).fill(0);
   fluxo[0]=-saldoInicial;
 
-  let base=new Date();
-  let data0=gerarData(base,MESES_CARENCIA);
+  let data0=gerarData(base,mesesCar);
   let anterior=base;
 
   for(let i=0;i<nParcelas;i++){
@@ -457,7 +464,7 @@ function simular(){
     let amortI=(i===nParcelas-1)?round2(saldo):amort;
     let parcela=round2(juros+amortI);
     tabela.push([i+1,dataAtual.toLocaleDateString("pt-BR"),saldo,amortI,juros,parcela]);
-    fluxo[MESES_CARENCIA+i*PERIODO_MESES]+=parcela;
+    fluxo[mesesCar+i*PERIODO_MESES]+=parcela;
     saldo=round2(saldo-amortI);
     anterior=dataAtual;
   }
