@@ -348,18 +348,25 @@ function jurosPeriodo(saldo,taxaAnual,dias,dataRef){
 }
 
 // ========= CET =========
-function calcularCET(fluxo){
-  let taxa=0.01;
+// Newton-Raphson sobre dias corridos reais (t = dias/365), consistente com a mesma
+// convenção usada em jurosPeriodo(). Como não há tarifa embutida no fluxo (decisão do
+// usuário), o CET resultante deve bater com a taxa nominal (9,2% a.a.) — usar índice de
+// mês inteiro (como no Pronamp CE) distorce o resultado quando a 1ª parcela cai fora de
+// um número exato de meses de 30,44 dias (caso do "próximo dia 15 + 12 meses" do Move
+// Agrícola), subestimando o CET.
+function calcularCETAnual(fluxo){
+  // fluxo: array de {dias, valor} — dias corridos desde a liberação (t=0)
+  let taxa=0.10;
   for(let k=0;k<200;k++){
     let f=0,df=0;
-    for(let t=0;t<fluxo.length;t++){
-      if(fluxo[t]===0)continue;
-      f+=fluxo[t]/Math.pow(1+taxa,t);
-      df+=-t*fluxo[t]/Math.pow(1+taxa,t+1);
-    }
+    fluxo.forEach(fx=>{
+      let t=fx.dias/365;
+      f+=fx.valor/Math.pow(1+taxa,t);
+      df+=-t*fx.valor/Math.pow(1+taxa,t+1);
+    });
     if(Math.abs(df)<1e-12)break;
     let nt=taxa-f/df;
-    if(Math.abs(nt-taxa)<1e-8)break;
+    if(Math.abs(nt-taxa)<1e-9)break;
     taxa=nt;
   }
   return taxa;
@@ -450,9 +457,8 @@ function simular(){
 
   tabela=[];
 
-  // fluxo esparso por mês para CET (índice = mês desde a liberação)
-  let fluxo=new Array(prazoTotal+1).fill(0);
-  fluxo[0]=-saldoInicial;
+  // fluxo real por dias corridos desde a liberação (t=0) — ver calcularCETAnual()
+  let fluxo=[{dias:0,valor:-saldoInicial}];
 
   let data0=gerarData(base,mesesCar);
   let anterior=base;
@@ -464,13 +470,13 @@ function simular(){
     let amortI=(i===nParcelas-1)?round2(saldo):amort;
     let parcela=round2(juros+amortI);
     tabela.push([i+1,dataAtual.toLocaleDateString("pt-BR"),saldo,amortI,juros,parcela]);
-    fluxo[mesesCar+i*PERIODO_MESES]+=parcela;
+    fluxo.push({dias:Math.floor((dataAtual-base)/86400000),valor:parcela});
     saldo=round2(saldo-amortI);
     anterior=dataAtual;
   }
 
-  let cetMensal=calcularCET(fluxo);
-  let cetAnual=Math.pow(1+cetMensal,12)-1;
+  let cetAnual=calcularCETAnual(fluxo);
+  let cetMensal=Math.pow(1+cetAnual,1/12)-1;
 
   let totAmort=round2(tabela.reduce((a,r)=>a+r[3],0));
   let totJuros=round2(tabela.reduce((a,r)=>a+r[4],0));
