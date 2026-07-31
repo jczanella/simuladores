@@ -7,6 +7,7 @@ const ARQUIVOS = [
   '/simuladores/CE_pronampce.html',
   '/simuladores/CE_cdccampanha.html',
   '/simuladores/CE_cdcbalcao.html',
+  '/simuladores/AG_moveagricola.html',
   '/simuladores/manifest.json',
   '/simuladores/icon-192.png',
   '/simuladores/icon-512.png',
