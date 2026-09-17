@@ -300,12 +300,12 @@ function mask(el){
 const TAXA_ANUAL = 0.05;
 
 // ========= PRAZO =========
-// Carência = exatamente 1 período (12 meses anual / 6 meses semestral) a partir de hoje,
-// sempre no dia 15. Mesma regra de "próximo dia 15 + N meses" do +Inovação/Move Agrícola:
-// se hoje já passou do dia 15, o "próximo dia 15" cai no mês seguinte, então soma-se
-// 1 mês a mais para compensar o rollover.
+// Carência = sempre exatamente 1 período (12 meses anual / 6 meses semestral) a partir
+// de hoje, com o dia ajustado para 15. Diferente do +Inovação/Move Agrícola: aqui NÃO há
+// compensação de rollover quando hoje já passou do dia 15 — o vencimento fica sempre
+// em torno de 365 dias (anual) / 182 dias (semestral), nunca somando um mês extra.
 function calcMesesCarencia(base,periodoMeses){
-  return base.getDate()<16 ? periodoMeses : periodoMeses+1;
+  return periodoMeses;
 }
 const PRAZO_MAX_MESES = 84; // 7 anos — teto validado contra a simulação oficial do banco
 
@@ -391,10 +391,8 @@ function atualizarSelectParcelas(){
   let nMax=Math.floor((PRAZO_MAX_MESES-mesesCar)/periodoMeses)+1;
   let atual=parseInt(selectParcelas.value)||nMax;
   selectParcelas.innerHTML='';
-  let labelPer=periodoMeses===6?"semestral":"anual";
-  let labelPerPl=periodoMeses===6?"semestrais":"anuais";
   for(let n=1;n<=nMax;n++){
-    selectParcelas.add(new Option(n+" parcela"+(n>1?"s "+labelPerPl:" "+labelPer),n));
+    selectParcelas.add(new Option(n,n));
   }
   selectParcelas.value=Math.min(atual,nMax);
   atualizarStrip();
