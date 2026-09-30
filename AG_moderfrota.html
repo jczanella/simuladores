@@ -214,7 +214,7 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 <header>
   <div class="header-text">
     <h1>Simulador Moderfrota</h1>
-    <p>Linha AG / BNDES · SAC · Anual</p>
+    <p>Linha AG / BNDES · SAC · Semestral ou Anual</p>
   </div>
   <a href="index.html" class="btn btn-ghost" style="padding:8px 14px;font-size:.82rem;">
     <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
@@ -251,12 +251,20 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
       </div>
 
       <div class="field">
+        <label>Periodicidade</label>
+        <select id="selectPeriodicidade">
+          <option value="12">Anual (a cada 12 meses)</option>
+          <option value="6">Semestral (a cada 6 meses)</option>
+        </select>
+      </div>
+
+      <div class="field">
         <label>Carência</label>
         <select id="selectCarencia"></select>
       </div>
 
       <div class="field">
-        <label>Parcelas anuais</label>
+        <label>Número de Parcelas</label>
         <select id="selectParcelas"></select>
       </div>
 
@@ -314,15 +322,16 @@ function aaParaAm(aa){return Math.pow(1+aa,1/12)-1;}
 const ENTRADA_MIN=15; // % mínimo, sempre inteiro
 
 // ========= PRAZO =========
-// Periodicidade sempre anual. Carência selecionável até 14 meses, padrão 12 (mesma regra
-// do Pronaf: gerarData(hoje, meses) → dia 15, sem compensação de rollover). Se a carência
-// passar de 12 meses, o nº máximo de parcelas cai para caber no teto de 84 meses.
-const PERIODO_MESES=12;
+// Periodicidade anual (padrão) ou semestral. Carência selecionável de 3 a 14 meses; padrão =
+// 1 período (12 anual / 6 semestral), mesma regra do Pronaf: gerarData(hoje, meses) → dia 15,
+// próximo dia útil, sem compensação de rollover. O nº máximo de parcelas é o que cabe no
+// teto de 84 meses a partir da carência escolhida.
+const CARENCIA_MIN=3;
 const CARENCIA_MAX=14;
-const CARENCIA_PADRAO=12;
 const PRAZO_MAX_MESES=84;
+function periodoMeses(){return parseInt(selectPeriodicidade.value);}
 function calcNMaxParcelas(mesesCar){
-  return Math.floor((PRAZO_MAX_MESES-mesesCar)/PERIODO_MESES)+1;
+  return Math.floor((PRAZO_MAX_MESES-mesesCar)/periodoMeses())+1;
 }
 
 // ========= FERIADOS NACIONAIS (calculados, sem limite de ano) =========
@@ -403,15 +412,20 @@ const PROTECAO=[
 
 // ========= SELECTS =========
 function montarSelectCarencia(){
-  for(let m=1;m<=CARENCIA_MAX;m++){
-    selectCarencia.add(new Option(m+(m===1?" mês":" meses"),m));
+  for(let m=CARENCIA_MIN;m<=CARENCIA_MAX;m++){
+    selectCarencia.add(new Option(m+" meses",m));
   }
-  selectCarencia.value=CARENCIA_PADRAO;
+  selectCarencia.value=periodoMeses(); // padrão = 1 período
 }
-function atualizarSelectParcelas(){
+// Ao trocar a periodicidade: carência volta ao padrão (1 período) e parcelas ao máximo.
+function onPeriodicidade(){
+  selectCarencia.value=periodoMeses();
+  atualizarSelectParcelas(true);
+}
+function atualizarSelectParcelas(forcarMax){
   let nMax=calcNMaxParcelas(parseInt(selectCarencia.value));
   // se estava no máximo anterior (ou vazio), acompanha o novo máximo
-  let eraMax=!selectParcelas.value||parseInt(selectParcelas.value)===selectParcelas.options.length;
+  let eraMax=forcarMax===true||!selectParcelas.value||parseInt(selectParcelas.value)===selectParcelas.options.length;
   let atual=eraMax?nMax:parseInt(selectParcelas.value);
   selectParcelas.innerHTML='';
   for(let n=1;n<=nMax;n++){
@@ -436,10 +450,12 @@ function montarSelectTaxa(){
 function atualizarStrip(){
   let nParcelas=parseInt(selectParcelas.value);
   let mesesCar=parseInt(selectCarencia.value);
-  let prazoTotal=mesesCar+(nParcelas-1)*PERIODO_MESES;
+  let prazoTotal=mesesCar+(nParcelas-1)*periodoMeses();
   let data0=gerarData(new Date(),mesesCar);
+  let sem=periodoMeses()===6;
+  let lbl=nParcelas===1?(sem?"parcela semestral":"parcela anual"):(sem?"parcelas semestrais":"parcelas anuais");
   infoStrip.innerHTML=
-    `<strong>${nParcelas} ${nParcelas===1?"parcela anual":"parcelas anuais"}</strong>`+
+    `<strong>${nParcelas} ${lbl}</strong>`+
     `<span>1º vencimento: ${data0.toLocaleDateString("pt-BR")}</span>`+
     `<span>Prazo total: ${prazoTotal} meses (${(prazoTotal/12).toFixed(1).replace(".",",")} anos)</span>`;
 }
@@ -459,6 +475,7 @@ window.onload=function(){
   montarSelectTaxa();
   atualizarSelectParcelas();
   selectCarencia.onchange=atualizarSelectParcelas;
+  selectPeriodicidade.onchange=onPeriodicidade;
   selectParcelas.onchange=atualizarStrip;
 
   percEntrada.value=ENTRADA_MIN;
@@ -527,12 +544,12 @@ function simular(){
   percEntrada.value=perc;
   atualizarFinanciado();
 
-  let periodoMeses=PERIODO_MESES;
+  let periodo=periodoMeses();
   let nParcelas=parseInt(selectParcelas.value);
-  let labelPer="Anual";
+  let labelPer=periodo===6?"Semestral":"Anual";
   let base=new Date();
   let mesesCar=parseInt(selectCarencia.value);
-  let prazoTotal=mesesCar+(nParcelas-1)*periodoMeses;
+  let prazoTotal=mesesCar+(nParcelas-1)*periodo;
 
   let saldoInicial=round2(valorV-entrada);
   // Amortização SAC constante em TODAS as parcelas (validado contra a simulação oficial:
@@ -549,7 +566,7 @@ function simular(){
   let anterior=base;
 
   for(let i=0;i<nParcelas;i++){
-    let dataAtual=(i===0)?data0:gerarData(data0,i*periodoMeses);
+    let dataAtual=(i===0)?data0:gerarData(data0,i*periodo);
     let dias=Math.floor((dataAtual-anterior)/86400000);
     let juros=jurosPeriodo(saldo,taxaAnual,dias,dataAtual);
     let parcela=round2(juros+amort);
@@ -571,7 +588,7 @@ function simular(){
 
   simParams={
     valorV,perc,entrada,saldoFin:saldoInicial,
-    periodoMeses,labelPer,nParcelas,prazoTotal,mesesCar,
+    periodoMeses:periodo,labelPer,nParcelas,prazoTotal,mesesCar,
     taxaTxt:`${format2(taxaAnual*100)}% a.a.  |  ${format2(aaParaAm(taxaAnual)*100)}% a.m.`,
     cetMensal:format2(cetMensal*100),cetAnual:format2(cetAnual*100),
     totAmort,totJuros,totValor

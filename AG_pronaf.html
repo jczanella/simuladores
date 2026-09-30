@@ -329,30 +329,28 @@ function percMinParaFinanciado(v,alvo){
   return Math.min(Math.max(p,0),100);
 }
 
-// ========= FERIADOS (2026-2031) =========
-const FERIADOS=new Set([
-  new Date(2026,0,2),new Date(2026,2,1),new Date(2026,2,2),new Date(2026,3,16),
-  new Date(2026,3,22),new Date(2026,4,2),new Date(2026,5,17),new Date(2026,8,8),
-  new Date(2026,9,13),new Date(2026,10,3),new Date(2026,10,16),new Date(2026,11,26),
-  new Date(2027,0,2),new Date(2027,1,21),new Date(2027,1,22),new Date(2027,3,8),
-  new Date(2027,3,22),new Date(2027,4,2),new Date(2027,5,9),new Date(2027,8,8),
-  new Date(2027,9,13),new Date(2027,10,3),new Date(2027,10,16),new Date(2027,11,26),
-  new Date(2028,0,2),new Date(2028,1,13),new Date(2028,1,14),new Date(2028,2,30),
-  new Date(2028,3,22),new Date(2028,4,2),new Date(2028,4,31),new Date(2028,8,8),
-  new Date(2028,9,13),new Date(2028,10,3),new Date(2028,10,16),new Date(2028,10,21),
-  new Date(2028,11,26),new Date(2029,0,2),new Date(2029,2,4),new Date(2029,2,5),
-  new Date(2029,3,19),new Date(2029,3,22),new Date(2029,4,2),new Date(2029,5,20),
-  new Date(2029,8,8),new Date(2029,9,13),new Date(2029,10,3),new Date(2029,10,16),
-  new Date(2029,10,21),new Date(2029,11,26),new Date(2030,0,2),new Date(2030,1,17),
-  new Date(2030,1,18),new Date(2030,3,4),new Date(2030,3,22),new Date(2030,4,2),
-  new Date(2030,5,5),new Date(2030,8,8),new Date(2030,9,13),new Date(2030,10,3),
-  new Date(2030,10,16),new Date(2030,10,21),new Date(2030,11,26),new Date(2031,0,2),
-  new Date(2031,1,9),new Date(2031,1,10),new Date(2031,2,27),new Date(2031,3,22),
-  new Date(2031,4,2),new Date(2031,4,28),new Date(2031,8,8),new Date(2031,9,13),
-  new Date(2031,10,3),new Date(2031,10,16),new Date(2031,10,21),new Date(2031,11,26),
-].map(d=>d.toDateString()));
-
-function eFeriado(d){return FERIADOS.has(d.toDateString());}
+// ========= FERIADOS NACIONAIS (calculados, sem limite de ano) =========
+// Fixos + móveis baseados na Páscoa (Carnaval seg/ter, Sexta-feira Santa, Corpus Christi).
+function pascoa(ano){
+  let a=ano%19,b=Math.floor(ano/100),c=ano%100,d=Math.floor(b/4),e=b%4,
+      f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,
+      i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+      mes=Math.floor((h+l-7*m+114)/31),dia=((h+l-7*m+114)%31)+1;
+  return new Date(ano,mes-1,dia);
+}
+const _feriadosCache={};
+function feriadosDoAno(ano){
+  if(_feriadosCache[ano])return _feriadosCache[ano];
+  let p=pascoa(ano);
+  let rel=n=>{let d=new Date(p);d.setDate(d.getDate()+n);return d;};
+  let lista=[
+    new Date(ano,0,1),rel(-48),rel(-47),rel(-2),new Date(ano,3,21),new Date(ano,4,1),
+    rel(60),new Date(ano,8,7),new Date(ano,9,12),new Date(ano,10,2),new Date(ano,10,15),
+    new Date(ano,10,20),new Date(ano,11,25)
+  ];
+  return _feriadosCache[ano]=new Set(lista.map(d=>d.toDateString()));
+}
+function eFeriado(d){return feriadosDoAno(d.getFullYear()).has(d.toDateString());}
 function proximoDiaUtil(d){
   let r=new Date(d);
   while(r.getDay()===0||r.getDay()===6||eFeriado(r)) r.setDate(r.getDate()+1);
