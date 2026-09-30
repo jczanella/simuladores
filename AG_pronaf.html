@@ -100,6 +100,8 @@ main{max-width:900px;margin:0 auto;padding:28px 16px 0;}
   width:100%;
 }
 .field input:focus,.field select:focus{border-color:var(--blue);}
+.field .hint{font-size:.7rem;color:#b45309;font-weight:600;}
+.field .hint:empty{display:none;}
 .field input[readonly]{
   background:#f5f7fa;
   color:var(--text-soft);
@@ -242,6 +244,12 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
       </div>
 
       <div class="field">
+        <label>Valor Financiado (R$)</label>
+        <input id="valorFinanciado" placeholder="0">
+        <small id="hintLimite" class="hint"></small>
+      </div>
+
+      <div class="field">
         <label>Periodicidade</label>
         <select id="selectPeriodicidade">
           <option value="12">Anual (a cada 12 meses)</option>
@@ -308,6 +316,18 @@ function calcMesesCarencia(base,periodoMeses){
   return periodoMeses;
 }
 const PRAZO_MAX_MESES = 84; // 7 anos — teto validado contra a simulação oficial do banco
+
+// ========= LIMITE DE FINANCIAMENTO =========
+// Valor máximo financiado pelo Pronaf. Usado apenas para SUGERIR entrada ao digitar o
+// Valor do Bem — não bloqueia a simulação (o usuário pode alterar a entrada sugerida).
+const LIMITE_FINANCIADO = 250000;
+
+// % de entrada inteiro mínimo para que o financiado fique <= alvo (ceil com tolerância
+// de ponto flutuante, p/ não virar 21% quando a conta exata dá 20,0000000001%).
+function percMinParaFinanciado(v,alvo){
+  let p=Math.ceil((v-alvo)/v*100-1e-9);
+  return Math.min(Math.max(p,0),100);
+}
 
 // ========= FERIADOS (2026-2031) =========
 const FERIADOS=new Set([
@@ -416,17 +436,48 @@ function atualizarStrip(){
 window.onload=function(){
   mask(valor);
   mask(valorEntrada);
+  mask(valorFinanciado);
 
   atualizarSelectParcelas();
   selectPeriodicidade.onchange=atualizarSelectParcelas;
   selectParcelas.onchange=atualizarStrip;
 
+  // Valor do Bem → mantém o % de entrada atual e recalcula Entrada (R$) e Financiado.
+  // Se o financiado passar de LIMITE_FINANCIADO, sugere o menor % inteiro de entrada que
+  // o traz para <= limite (só sugestão — o usuário pode reduzir a entrada depois).
+  // percUsuario guarda o % que o usuário tinha antes da sugestão automática, para que, se o
+  // Valor do Bem voltar a ficar dentro do limite, a entrada volte ao que ele havia escolhido.
+  let percUsuario=null;
+  valor.addEventListener("input",()=>{
+    let v=parseBR(valor.value);
+    if(!v){atualizarFinanciado();return;}
+    let pBase=parseFloat(percUsuario!==null?percUsuario:percEntrada.value);
+    let vazio=percUsuario===null&&percEntrada.value==='';
+    if(isNaN(pBase))pBase=0;
+    let pMin=percMinParaFinanciado(v,LIMITE_FINANCIADO);
+    if(pBase<pMin){
+      if(percUsuario===null)percUsuario=vazio?'':pBase;
+      percEntrada.value=pMin;
+      valorEntrada.value=format2(v*pMin/100);
+    }else{
+      if(percUsuario!==null){percEntrada.value=percUsuario;percUsuario=null;}
+      if(percEntrada.value!=='')valorEntrada.value=format2(v*pBase/100);
+      else valorEntrada.value='';
+    }
+    atualizarFinanciado();
+  });
+  // qualquer edição manual da entrada/financiado torna o valor atual escolha do usuário
+  [percEntrada,valorEntrada,valorFinanciado].forEach(el=>
+    el.addEventListener("input",()=>{percUsuario=null;}));
+  valorFinanciado.addEventListener("focus",()=>valorFinanciado.select());
+
   percEntrada.oninput=()=>{
     let p=parseFloat(percEntrada.value);
     if(p>100){percEntrada.value=100;p=100;}
     let v=parseBR(valor.value);
-    if(!v||isNaN(p))return;
+    if(!v||isNaN(p)){atualizarFinanciado();return;}
     valorEntrada.value=format2(v*p/100);
+    atualizarFinanciado();
   };
   percEntrada.onblur=()=>{
     let p=parseFloat(percEntrada.value);
@@ -435,12 +486,14 @@ window.onload=function(){
     percEntrada.value=p;
     let v=parseBR(valor.value);
     if(v)valorEntrada.value=format2(v*p/100);
+    atualizarFinanciado();
   };
   valorEntrada.oninput=()=>{
     let v=parseBR(valor.value);
     let e=parseBR(valorEntrada.value);
-    if(!v||!e){percEntrada.value='';return;}
+    if(!v||!e){percEntrada.value='';atualizarFinanciado();return;}
     percEntrada.value=Math.min(Math.round(e/v*100),100);
+    atualizarFinanciado();
   };
   valorEntrada.onblur=()=>{
     let v=parseBR(valor.value);
@@ -449,8 +502,45 @@ window.onload=function(){
     let p=Math.min(Math.round(e/v*100),100);
     percEntrada.value=p;
     valorEntrada.value=format2(v*p/100);
+    atualizarFinanciado();
+  };
+
+  // Valor Financiado → deriva o % de entrada (sempre INTEIRO). Arredonda o % para CIMA,
+  // para que o financiado final nunca fique acima do valor digitado; Entrada (R$) e o
+  // próprio Financiado são reajustados ao sair do campo para bater com o % inteiro.
+  // IMPORTANTE: não sobrescrever valorFinanciado.value no oninput (quebra digitação no celular).
+  valorFinanciado.oninput=()=>{
+    let v=parseBR(valor.value);
+    if(!v||valorFinanciado.value==='')return;
+    let p=percMinParaFinanciado(v,parseBR(valorFinanciado.value));
+    percEntrada.value=p;
+    valorEntrada.value=format2(v*p/100);
+    atualizarHintLimite();
+  };
+  valorFinanciado.onblur=()=>{
+    let v=parseBR(valor.value);
+    if(!v||valorFinanciado.value==='')return;
+    let p=percMinParaFinanciado(v,parseBR(valorFinanciado.value));
+    percEntrada.value=p;
+    valorEntrada.value=format2(v*p/100);
+    atualizarFinanciado();
   };
 };
+
+// ========= VALOR FINANCIADO (campo derivado) =========
+function atualizarFinanciado(){
+  let v=parseBR(valor.value);
+  if(!v){valorFinanciado.value='';atualizarHintLimite();return;}
+  let e=parseBR(valorEntrada.value);
+  valorFinanciado.value=format2(round2(Math.max(v-e,0)));
+  atualizarHintLimite();
+}
+function atualizarHintLimite(){
+  let f=parseBR(valorFinanciado.value);
+  hintLimite.textContent=f>LIMITE_FINANCIADO
+    ?`Acima do limite Pronaf (R$ ${format2(LIMITE_FINANCIADO)})`
+    :'';
+}
 
 // ========= SIMULAÇÃO =========
 function simular(){
@@ -461,6 +551,7 @@ function simular(){
   let entrada=round2(valorV*perc/100);
   valorEntrada.value=format2(entrada);
   percEntrada.value=perc;
+  atualizarFinanciado();
 
   let periodoMeses=parseInt(selectPeriodicidade.value);
   let nParcelas=parseInt(selectParcelas.value);
