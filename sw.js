@@ -9,6 +9,7 @@ const ARQUIVOS = [
   '/simuladores/CE_cdcbalcao.html',
   '/simuladores/AG_moveagricola.html',
   '/simuladores/AG_pronaf.html',
+  '/simuladores/AG_moderfrota.html',
   '/simuladores/manifest.json',
   '/simuladores/icon-192.png',
   '/simuladores/icon-512.png',
