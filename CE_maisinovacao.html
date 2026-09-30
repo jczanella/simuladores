@@ -70,6 +70,18 @@ header{
 /* ── MAIN ── */
 main{max-width:900px;margin:0 auto;padding:28px 16px 0;}
 
+/* ── AVISO DA LINHA (só em tela) ── */
+.aviso-linha{
+  background:#fffbea;
+  border:1px solid #f3d27a;
+  border-radius:10px;
+  padding:12px 16px;
+  margin-bottom:20px;
+  color:#b45309;
+  font-size:.9rem;
+  font-weight:700;
+}
+
 /* ── CARD ── */
 .card{
   background:var(--card);
@@ -222,6 +234,9 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
 </header>
 
 <main>
+
+  <!-- ── AVISO (somente em tela — não vai para o PDF) ── -->
+  <div class="aviso-linha">Atenção: linha sem recurso</div>
 
   <!-- ── FORMULÁRIO ── -->
   <div class="card">
