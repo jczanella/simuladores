@@ -16,6 +16,7 @@ const ARQUIVOS = [
   '/simuladores/manifest.json',
   '/simuladores/icon-192.png',
   '/simuladores/icon-512.png',
+  '/simuladores/logo-bb.png',
 ];
 
 // Instalação: pré-carrega arquivos locais no cache
