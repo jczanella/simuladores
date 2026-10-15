@@ -638,6 +638,20 @@ function simular(){
   resultado.innerHTML=html;
 }
 
+// ========= NOME DO ARQUIVO PDF =========
+// Valor financiado EXATO, sem arredondar e sem "R$": 1.150.000 → "1,15 mi"; 850.000 → "850 mil";
+// qualquer outro valor sai por extenso (ex.: 1.234.567 ou 1.234.567,89).
+function nomeValor(v){
+  v=round2(v);
+  if(v>=1000000&&v%10000===0){
+    return String(+(v/1000000).toFixed(2)).replace(".",",")+" mi";
+  }
+  if(v>=1000&&v<1000000&&v%1000===0){
+    return (v/1000)+" mil";
+  }
+  return format2(v).replace(/,00$/,"");
+}
+
 // ========= PDF =========
 function gerarPDF(){
   if(!tabela.length){alert("Simule primeiro.");return;}
@@ -809,11 +823,7 @@ function gerarPDF(){
     ty+=3.4;
   });
 
-  function fmtK(v){
-    if(v>=1000000){let m=v/1000000;return(m%1===0?String(Math.round(m)):m.toFixed(1).replace('.',','))+' mi';}
-    let k=v/1000;return(k%1===0?String(Math.round(k)):k.toFixed(1).replace('.',','))+' mil';
-  }
-  doc.save(`+Inovação Rural CE ${fmtK(p.valorV)} ${p.perc}% ${p.prazoAnos} anos.pdf`);
+  doc.save(`+Inovação Rural CE ${nomeValor(p.saldoFin)} ${p.perc}% ${p.prazoAnos} anos.pdf`);
 }
 
 </script>
