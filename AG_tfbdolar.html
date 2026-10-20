@@ -271,8 +271,19 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
       </div>
 
       <div class="field">
-        <label>Taxa de Juros</label>
-        <input id="taxaTxt" readonly tabindex="-1">
+        <label>Taxa de Juros (TFBD)</label>
+        <select id="selectTaxa"></select>
+        <small id="avisoTaxa" class="hint-soft"></small>
+      </div>
+
+      <div class="field">
+        <label>Taxa a.a. (%)</label>
+        <input id="taxaAno" inputmode="decimal">
+      </div>
+
+      <div class="field">
+        <label>Taxa a.m. (%)</label>
+        <input id="taxaMes" inputmode="decimal">
       </div>
 
     </div>
@@ -313,11 +324,24 @@ function mask(el){
 }
 
 // ========= TAXA =========
-// TFBD (DI Agrícola 42-26, Demais Regiões, prazo 72/120): spread BNDES 0,95% + spread Banco
-// 2,10% + cotação TFBD 5,50% = 8,55% a.a. Atualizar quando sair nova cotação no DI.
-const TAXA_ANUAL=0.0855;
-let taxaAnual=TAXA_ANUAL;
+// TFBD (DI Agrícola 46-26, Out/2026, cotação de 01/10/2026): taxa final = spread BNDES + spread
+// Banco (2,10%) + cotação TFBD. Spread BNDES: 0,95% Demais Regiões / 0,75% Norte/Nordeste.
+// Colunas "prazo/PL" do DI: 24/120, 72/120 e 120/120. Padrão = N/NE 120/120. Atualizar a cada DI mensal.
+const TAXAS_TFBD=[
+  {rotulo:"Norte/Nordeste · 120/120", aa:0.0891},
+  {rotulo:"Norte/Nordeste · 72/120",  aa:0.0893},
+  {rotulo:"Norte/Nordeste · 24/120",  aa:0.0894},
+  {rotulo:"Demais Regiões · 120/120", aa:0.0911},
+  {rotulo:"Demais Regiões · 72/120",  aa:0.0913},
+  {rotulo:"Demais Regiões · 24/120",  aa:0.0914}
+];
+const REF_TAXAS="DI Agrícola 46-26 · Out/2026";
+let taxaAnual=TAXAS_TFBD[0].aa;
 function aaParaAm(aa){return Math.pow(1+aa,1/12)-1;}
+function amParaAa(am){return Math.pow(1+am,12)-1;}
+// Percentual com 2 a 4 casas (taxa digitada pode ter mais de 2 casas)
+function fmtTaxa(v){return v.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:4});}
+function parsePct(v){return parseFloat((v||"").replace(",","."));}
 
 // ========= ENTRADA =========
 const ENTRADA_MIN=0; // até 100% financiado; % sempre inteiro
@@ -433,8 +457,43 @@ function atualizarSelectParcelas(forcarMax){
   selectParcelas.value=Math.min(atual,nMax);
   atualizarStrip();
 }
+function taxaTxtAtual(){
+  return `${fmtTaxa(taxaAnual*100)}% a.a.  |  ${format2(aaParaAm(taxaAnual)*100)}% a.m.`;
+}
+// Taxa: dropdown com as taxas do DI + digitação livre (a.a. e a.m. sincronizados). Digitar
+// qualquer valor marca o dropdown como "Outra taxa".
+function atualizarCamposTaxa(){
+  taxaAno.value=fmtTaxa(taxaAnual*100);
+  taxaMes.value=format2(aaParaAm(taxaAnual)*100);
+}
 function montarTaxa(){
-  taxaTxt.value=`${format2(taxaAnual*100)}% a.a.  |  ${format2(aaParaAm(taxaAnual)*100)}% a.m.`;
+  TAXAS_TFBD.forEach((t,i)=>selectTaxa.add(new Option(`${t.rotulo} — ${fmtTaxa(t.aa*100)}% a.a.`,i)));
+  selectTaxa.add(new Option("Outra taxa (digitada)","custom"));
+  avisoTaxa.textContent=`Taxas do ${REF_TAXAS}. Também é possível digitar a taxa.`;
+  aplicarTaxa(0);
+  selectTaxa.onchange=()=>{if(selectTaxa.value!=="custom")aplicarTaxa(parseInt(selectTaxa.value));};
+  taxaAno.oninput=()=>{
+    let aa=parsePct(taxaAno.value)/100;
+    selectTaxa.value="custom";
+    taxaAnual=isNaN(aa)?NaN:aa;
+    taxaMes.value=isNaN(aa)?"":format2(aaParaAm(aa)*100);
+  };
+  taxaMes.oninput=()=>{
+    let am=parsePct(taxaMes.value)/100;
+    selectTaxa.value="custom";
+    taxaAnual=isNaN(am)?NaN:amParaAa(am);
+    taxaAno.value=isNaN(am)?"":fmtTaxa(taxaAnual*100);
+  };
+  // ao sair do campo, reformata (taxa vazia/inválida volta à última taxa válida)
+  taxaAno.onblur=taxaMes.onblur=()=>{
+    if(isNaN(taxaAnual)||taxaAnual<=0)aplicarTaxa(0);
+    else atualizarCamposTaxa();
+  };
+}
+function aplicarTaxa(i){
+  taxaAnual=TAXAS_TFBD[i].aa;
+  selectTaxa.value=i;
+  atualizarCamposTaxa();
 }
 
 // ========= ATUALIZA INFO STRIP =========
@@ -532,6 +591,7 @@ function simular(){
   gtag('event','simular',{simulador:document.title});
   let valorV=parseBR(valor.value);
   if(!valorV){alert("Informe o Valor do Bem.");return;}
+  if(isNaN(taxaAnual)||taxaAnual<=0){alert("Informe a Taxa de Juros.");return;}
   let perc=normalizarPerc(parseFloat(percEntrada.value));
   let entrada=round2(valorV*perc/100);
   valorEntrada.value=format2(entrada);
@@ -588,15 +648,15 @@ function simular(){
   simParams={
     valorV,perc,entrada,saldoFin:saldoInicial,
     periodoMeses:periodo,labelPer,nParcelas,nJuros,prazoTotal,mesesCar,
-    taxaTxt:`${format2(taxaAnual*100)}% a.a.  |  ${format2(aaParaAm(taxaAnual)*100)}% a.m.`,
-    cetMensal:format2(cetMensal*100),cetAnual:format2(cetAnual*100),
+    taxaTxt:taxaTxtAtual(),
+    cetMensal:format2(cetMensal*100),cetAnual:fmtTaxa(cetAnual*100),
     totAmort,totJuros,totValor
   };
 
   let html=`
   <div class="cet-banner">
     <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${format2(cetMensal*100)}% a.m.</span></div>
-    <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${format2(cetAnual*100)}% a.a.</span></div>
+    <div class="cet-item"><span class="cet-label">CET</span><span class="cet-value">${fmtTaxa(cetAnual*100)}% a.a.</span></div>
     <div class="cet-item"><span class="cet-label">Total de Juros</span><span class="cet-value">R$ ${format2(totJuros)}</span></div>
     <div class="cet-item"><span class="cet-label">Total Pago</span><span class="cet-value">R$ ${format2(totValor)}</span></div>
   </div>
