@@ -14,6 +14,7 @@ const ARQUIVOS = [
   '/simuladores/AG_moderfrota.html',
   '/simuladores/AG_pronamp.html',
   '/simuladores/AG_tfbdolar.html',
+  '/simuladores/AG_cdcnaorural.html',
   '/simuladores/manifest.json',
   '/simuladores/icon-192.png',
   '/simuladores/icon-512.png',
