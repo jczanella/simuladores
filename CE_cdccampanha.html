@@ -224,7 +224,7 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
     <div class="modal-seg">
       <button id="btnLeves" class="modal-btn active" onclick="setModal('leves')">
         <span class="modal-name">Leves</span>
-        <span class="modal-desc">Minis e Retroescavadeiras &nbsp;·&nbsp; Entrada mínima 10%</span>
+        <span class="modal-desc">Minis e Retroescavadeiras &nbsp;·&nbsp; Até 100% financiado</span>
       </button>
       <button id="btnPesados" class="modal-btn" onclick="setModal('pesados')">
         <span class="modal-name">Pesados</span>
@@ -315,7 +315,7 @@ function mask(el){
 
 // ========= CONSTANTES =========
 const TAXAS_PRAZO={6:0,12:0,18:0.0089,24:0.0089};
-const ENTRADA_MIN={leves:10,pesados:50};
+const ENTRADA_MIN={leves:0,pesados:50};
 const TAC=1400;
 
 // ========= MODALIDADE =========
