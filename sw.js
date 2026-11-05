@@ -10,6 +10,7 @@ const ARQUIVOS = [
   '/simuladores/CE_cdcbalcao.html',
   '/simuladores/CE_cdcrural.html',
   '/simuladores/CE_finamefat.html',
+  '/simuladores/CE_fatrural.html',
   '/simuladores/AG_moveagricola.html',
   '/simuladores/AG_pronaf.html',
   '/simuladores/AG_moderfrota.html',
