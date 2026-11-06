@@ -379,11 +379,16 @@ function gerarData(base,mes){
 // Regra do Moderfrota (usuário, 2026-11-06; confirmada no PDF oficial do banco
 // Simulacao_Moderfrota_1785866778739: semestral, carência 12 → juros em início+6 meses):
 // se a carência for maior que 1 período, há um pagamento só de juros a cada período
-// ANTES da 1ª amortização (1ª amortização − 1 período, − 2 períodos, ...), enquanto
-// cair depois da data de início. Datas = dia 15, próximo dia útil (gerarData).
+// ANTES da 1ª amortização (1ª amortização − 1 período, − 2 períodos, ...).
+// Critério do Excel oficial (MODERFROTA (NOVOS E USADOS) 2024_2025.xlsx, células O7/O9/O12/N9):
+// a data só entra se for POSTERIOR ao "próximo dia 15" a partir do início (início no dia ≥15 →
+// dia 15 do mês seguinte; senão, dia 15 do mesmo mês). Ex.: início 15/12/2026, carência 13 anual
+// → sem linha de juros; início 10/12/2026, carência 13 → juros em 15/01/2027.
+// Datas = dia 15, próximo dia útil (gerarData).
 function datasJurosCarencia(base,mesesCar,periodo){
   let lista=[];
-  for(let m=mesesCar-periodo;m>0;m-=periodo) lista.unshift(gerarData(base,m));
+  let mMin=base.getDate()>=15?1:0; // meses do "próximo dia 15" (O12 do Excel)
+  for(let m=mesesCar-periodo;m>mMin;m-=periodo) lista.unshift(gerarData(base,m));
   return lista;
 }
 
