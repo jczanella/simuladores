@@ -182,6 +182,8 @@ tbody td{
 tbody td:first-child{text-align:center;color:var(--text-soft);font-size:.78rem;width:52px;}
 tbody td:nth-child(2){text-align:left;}
 tbody tr:hover{background:var(--blue-pale);}
+tbody tr.carencia td{color:#7a5c00;background:#fffbea;}
+tbody tr.carencia td:first-child{color:#7a5c00;}
 
 tfoot tr{background:var(--blue);}
 tfoot td{
@@ -373,6 +375,18 @@ function gerarData(base,mes){
   return proximoDiaUtil(d);
 }
 
+// ========= PAGAMENTOS SÓ DE JUROS NA CARÊNCIA =========
+// Regra do Moderfrota (usuário, 2026-11-06; confirmada no PDF oficial do banco
+// Simulacao_Moderfrota_1785866778739: semestral, carência 12 → juros em início+6 meses):
+// se a carência for maior que 1 período, há um pagamento só de juros a cada período
+// ANTES da 1ª amortização (1ª amortização − 1 período, − 2 períodos, ...), enquanto
+// cair depois da data de início. Datas = dia 15, próximo dia útil (gerarData).
+function datasJurosCarencia(base,mesesCar,periodo){
+  let lista=[];
+  for(let m=mesesCar-periodo;m>0;m-=periodo) lista.unshift(gerarData(base,m));
+  return lista;
+}
+
 // ========= JUROS =========
 // Validado contra a simulação oficial do banco (Simulacao_Moderfrota_...pdf): denominador
 // VARIÁVEL conforme o ano do vencimento (366 em ano bissexto) — igual ao Pronamp CE e
@@ -469,12 +483,15 @@ function atualizarStrip(){
   let nParcelas=parseInt(selectParcelas.value);
   let mesesCar=parseInt(selectCarencia.value);
   let prazoTotal=mesesCar+(nParcelas-1)*periodoMeses();
-  let data0=gerarData(dataBase(),mesesCar);
+  let base=dataBase();
+  let data0=gerarData(base,mesesCar);
+  let nJuros=datasJurosCarencia(base,mesesCar,periodoMeses()).length;
   let sem=periodoMeses()===6;
   let lbl=nParcelas===1?(sem?"parcela semestral":"parcela anual"):(sem?"parcelas semestrais":"parcelas anuais");
+  let lblJuros=nJuros?` + ${nJuros} ${nJuros===1?"pagamento":"pagamentos"} só de juros na carência`:"";
   infoStrip.innerHTML=
-    `<strong>${nParcelas} ${lbl}</strong>`+
-    `<span>1º vencimento: ${data0.toLocaleDateString("pt-BR")}</span>`+
+    `<strong>${nParcelas} ${lbl}${lblJuros}</strong>`+
+    `<span>1ª amortização: ${data0.toLocaleDateString("pt-BR")}</span>`+
     `<span>Prazo total: ${prazoTotal} meses (${(prazoTotal/12).toFixed(1).replace(".",",")} anos)</span>`;
 }
 
@@ -587,18 +604,22 @@ function simular(){
   let fluxo=[{dias:0,valor:-saldoInicial}];
 
   let data0=gerarData(base,mesesCar);
+  // Eventos: [data, amortiza?] — pagamentos só de juros na carência (se houver) + amortizações.
+  let eventos=datasJurosCarencia(base,mesesCar,periodo).map(d=>[d,false]);
+  for(let i=0;i<nParcelas;i++) eventos.push([(i===0)?data0:gerarData(data0,i*periodo),true]);
+  let nJuros=eventos.length-nParcelas;
   let anterior=base;
 
-  for(let i=0;i<nParcelas;i++){
-    let dataAtual=(i===0)?data0:gerarData(data0,i*periodo);
+  eventos.forEach(([dataAtual,amortiza],i)=>{
     let dias=Math.floor((dataAtual-anterior)/86400000);
     let juros=jurosPeriodo(saldo,taxaAnual,dias,dataAtual);
-    let parcela=round2(juros+amort);
-    tabela.push([i+1,dataAtual.toLocaleDateString("pt-BR"),saldo,amort,juros,parcela]);
+    let a=amortiza?amort:0;
+    let parcela=round2(juros+a);
+    tabela.push([i+1,dataAtual.toLocaleDateString("pt-BR"),saldo,a,juros,parcela,!amortiza]);
     fluxo.push({dias:Math.floor((dataAtual-base)/86400000),valor:parcela});
-    saldo=round2(saldo-amort);
+    saldo=round2(saldo-a);
     anterior=dataAtual;
-  }
+  });
 
   let cetAnual=calcularCETAnual(fluxo);
   let cetMensal=Math.pow(1+cetAnual,1/12)-1;
@@ -612,7 +633,7 @@ function simular(){
 
   simParams={
     valorV,perc,entrada,saldoFin:saldoInicial,
-    periodoMeses:periodo,labelPer,nParcelas,prazoTotal,mesesCar,
+    periodoMeses:periodo,labelPer,nParcelas,nJuros,prazoTotal,mesesCar,
     inicioTxt:base.toLocaleDateString("pt-BR"),
     taxaTxt:`${format2(taxaAnual*100)}% a.a.  |  ${format2(aaParaAm(taxaAnual)*100)}% a.m.`,
     cetMensal:format2(cetMensal*100),cetAnual:format2(cetAnual*100),
@@ -641,7 +662,7 @@ function simular(){
     <tbody>`;
 
   tabela.forEach(r=>{
-    html+=`<tr>
+    html+=`<tr${r[6]?' class="carencia"':''}>
       <td>${r[0]}</td>
       <td>${r[1]}</td>
       <td>${format2(r[2])}</td>
@@ -718,7 +739,7 @@ function gerarPDF(){
     ["Taxa de Juros",     p.taxaTxt],
     ["Periodicidade",     p.labelPer],
     ["Carência",          `${p.mesesCar} ${p.mesesCar===1?"mês":"meses"}`],
-    ["Nº de Parcelas",    `${p.nParcelas} ${p.nParcelas===1?"parcela":"parcelas"}`],
+    ["Nº de Parcelas",    `${p.nParcelas} ${p.nParcelas===1?"parcela":"parcelas"}`+(p.nJuros?` + ${p.nJuros} só juros`:"")],
     ["Prazo Total",       `${p.prazoTotal} meses`],
     ["CET",               `${p.cetMensal}% a.m.  |  ${p.cetAnual}% a.a.`],
     ["Total de Juros",    `R$ ${format2(p.totJuros)}`],
@@ -801,6 +822,11 @@ function gerarPDF(){
     alternateRowStyles:{fillColor:[248,249,252]},
     didParseCell:function(data){
       if(data.section==="body"){
+        let r=tabela[data.row.index];
+        if(r&&r[6]){
+          data.cell.styles.fillColor=[255,251,234];
+          data.cell.styles.textColor=[122,92,0];
+        }
         if(data.row.index===rows.length-1){
           data.cell.styles.fillColor=BLUE;
           data.cell.styles.textColor=WHITE;
