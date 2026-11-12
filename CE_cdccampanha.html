@@ -224,15 +224,11 @@ tfoot td:nth-child(3){opacity:.8;font-weight:400;}
     <div class="modal-seg">
       <button id="btnLeves" class="modal-btn active" onclick="setModal('leves')">
         <span class="modal-name">Leves</span>
-        <span class="modal-desc">Minis e Retroescavadeiras &nbsp;·&nbsp; Até 100% financiado</span>
+        <span class="modal-desc">Minis e Retroescavadeiras &nbsp;·&nbsp; Até 100% financiado &nbsp;·&nbsp; 48x e 60x com entrada mínima 20%</span>
       </button>
       <button id="btnPesados" class="modal-btn" onclick="setModal('pesados')">
         <span class="modal-name">Pesados</span>
-        <span class="modal-desc">Pá, Motoniveladora, Escavadeira &nbsp;·&nbsp; Entrada mínima 50%</span>
-      </button>
-      <button id="btnNh" class="modal-btn" onclick="setModal('nh')">
-        <span class="modal-name">Linha NH</span>
-        <span class="modal-desc">Toda linha NH · Não rural · Rating A e B &nbsp;·&nbsp; Entrada mínima 20% &nbsp;·&nbsp; Vigência até 30/12/2026</span>
+        <span class="modal-desc">Pá, Motoniveladora, Escavadeira &nbsp;·&nbsp; Entrada mínima 20% &nbsp;·&nbsp; Abaixo de 50%: 12x, 24x e 48x a 1,29% a.m., 60x a 1,33% a.m.</span>
       </button>
     </div>
   </div>
@@ -313,20 +309,32 @@ function mask(el){
 }
 
 // ========= CONSTANTES =========
-// Taxas a.m. por modalidade e prazo. Linha NH: campanha CDC não rural, rating A e B, vigência 30/12/2026
-const TAXAS_MODAL={
-  leves:  {6:0,12:0,18:0.0089,24:0.0089},
-  pesados:{6:0,12:0,18:0.0089,24:0.0089},
-  nh:     {48:0.0129,60:0.0133},
-};
-const PRAZO_PADRAO={leves:12,pesados:12,nh:60};
-const ENTRADA_MIN={leves:0,pesados:50,nh:20};
-const MODAL_NOME={leves:'Leves',pesados:'Pesados',nh:'Linha NH'};
+// Taxas a.m. por prazo
+const TAXAS_BASE={6:0,12:0,18:0.0089,24:0.0089};          // campanha original (Leves; Pesados com entrada >= 50%)
+// Campanha NH (toda linha NH, não rural, rating A e B, vigência 30/12/2026): entrada mínima 20%
+const TAXAS_NH={48:0.0129,60:0.0133};
+const ENTRADA_MIN_NH=20;
+// Pesados com entrada < 50%: 12x e 24x a 1,29% a.m. (6x e 18x não disponíveis)
+const TAXAS_PESADOS_ABAIXO50={12:0.0129,24:0.0129};
+const PRAZO_PADRAO=12;
+const ENTRADA_MIN={leves:0,pesados:20};
+const MODAL_NOME={leves:'Leves',pesados:'Pesados'};
 const MODAL_LABEL={
   leves:'Leves (Minis e Retroescavadeiras)',
   pesados:'Pesados (Pá, Moto, Escavadeira)',
-  nh:'Linha NH (não rural, rating A e B)',
 };
+
+// Tabela de taxas disponível para a modalidade e o % de entrada
+function taxasDisponiveis(modal,perc){
+  let t={};
+  if(modal==='pesados'&&perc<50) Object.assign(t,TAXAS_PESADOS_ABAIXO50);
+  else Object.assign(t,TAXAS_BASE);
+  if(perc>=ENTRADA_MIN_NH) Object.assign(t,TAXAS_NH);
+  return t;
+}
+function percAtual(){
+  return Math.min(Math.max(Math.round(parsePerc(percEntrada.value||'0')*100)/100,0),100);
+}
 const TAC=1400;
 
 // ========= MODALIDADE =========
@@ -336,7 +344,6 @@ function setModal(m){
   modalAtual=m;
   document.getElementById('btnLeves').classList.toggle('active',m==='leves');
   document.getElementById('btnPesados').classList.toggle('active',m==='pesados');
-  document.getElementById('btnNh').classList.toggle('active',m==='nh');
   document.getElementById('erroEntrada').style.display='none';
 
   // Se % atual < mínimo da modalidade: ajustar para o mínimo
@@ -350,20 +357,20 @@ function setModal(m){
   montarPrazos();
 }
 
-// Reconstrói o select de prazo conforme a modalidade (mantém o prazo atual se existir)
+// Reconstrói o select de prazo conforme modalidade e % de entrada (mantém o prazo atual se existir)
 function montarPrazos(){
   let sel=document.getElementById('prazo');
   let atual=parseInt(sel.value);
-  let prazos=Object.keys(TAXAS_MODAL[modalAtual]).map(Number);
+  let prazos=Object.keys(taxasDisponiveis(modalAtual,percAtual())).map(Number).sort((a,b)=>a-b);
   sel.innerHTML='';
   prazos.forEach(n=>sel.add(new Option(n+' meses',n)));
-  sel.value=prazos.includes(atual)?atual:PRAZO_PADRAO[modalAtual];
+  sel.value=prazos.includes(atual)?atual:(prazos.includes(PRAZO_PADRAO)?PRAZO_PADRAO:prazos[0]);
   atualizarTaxa();
 }
 
 function atualizarTaxa(){
   let n=parseInt(document.getElementById('prazo').value);
-  let i=TAXAS_MODAL[modalAtual][n];
+  let i=taxasDisponiveis(modalAtual,percAtual())[n];
   let ia=i===0?0:Math.pow(1+i,12)-1;
   document.getElementById('taxaInfo').textContent=
     format2(i*100)+'% a.m. / '+format2(ia*100)+'% a.a.';
@@ -459,6 +466,7 @@ window.onload=function(){
     percEntrada.value=formatPerc(p);
     let v=parseBR(valor.value);
     if(v) valorEntrada.value=format2(v*p/100);
+    montarPrazos();
   };
   valorEntrada.oninput=()=>{
     let v=parseBR(valor.value);
@@ -474,6 +482,7 @@ window.onload=function(){
     let p=Math.min(Math.round(e/v*10000)/100,100);
     percEntrada.value=formatPerc(p);
     valorEntrada.value=format2(v*p/100);
+    montarPrazos();
   };
 };
 
@@ -498,8 +507,9 @@ function simular(){
   valorEntrada.value=format2(entrada);
   percEntrada.value=formatPerc(perc);
 
+  montarPrazos();   // garante prazo/taxa coerentes com o % de entrada
   let prazoV=parseInt(prazo.value);
-  let taxa=TAXAS_MODAL[modalAtual][prazoV];
+  let taxa=taxasDisponiveis(modalAtual,perc)[prazoV];
   let saldoFin=round2(valorV-entrada);
 
   let base=saldoFin+TAC;         // base s/ IOF = financiado + TAC
