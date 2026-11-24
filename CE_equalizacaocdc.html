@@ -45,7 +45,11 @@ header{background:var(--blue);color:#fff;padding:20px 20px 18px;display:flex;ali
 .estrela{background:none;border:none;cursor:pointer;padding:6px;margin:-6px -6px -6px 0;line-height:0;border-radius:8px;flex-shrink:0;}
 .estrela:focus-visible{outline:2px solid #fff;}
 .estrela svg{width:28px;height:28px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linejoin:round;transition:fill .2s,stroke .2s;}
-.estrela.on svg{fill:#f5c518;stroke:#f5c518;}
+.estrela.on svg{fill:#fff;stroke:#fff;}
+.modal .acoes{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+.modal .acoes a,.modal .acoes button{display:block;text-align:center;text-decoration:none;margin:0;padding:11px;border-radius:8px;font-family:inherit;font-size:.92rem;font-weight:600;cursor:pointer;}
+.modal .acoes a{background:var(--blue);color:#fff;}
+.modal .acoes .sec{background:var(--blue-pale);color:var(--blue);border:none;}
 
 .modal-fundo{display:none;position:fixed;inset:0;background:rgba(10,20,40,.45);z-index:50;align-items:flex-end;justify-content:center;padding:16px;}
 .modal-fundo.show{display:flex;}
@@ -275,7 +279,15 @@ function gravarSalvo(){ try{ localStorage.setItem(CHAVE_SALVO,'1'); }catch(e){} 
 function marcarEstrela(on){ $('estrela').classList.toggle('on',on); $('estrela').setAttribute('aria-pressed',on?'true':'false'); }
 const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
 const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-marcarEstrela(standalone || lerSalvo());
+const ehAndroid = /android/i.test(navigator.userAgent);
+// O ícone "Equalização" abre com ?app=equalizacao (start_url do manifesto próprio).
+// Em modo app SEM esse marcador, a página está aberta DENTRO do app "Simuladores" (mesmo endereço).
+if(/[?&]app=equalizacao/.test(location.search)){ try{ sessionStorage.setItem('eqcdc_app','1'); }catch(e){} }
+function noProprioApp(){ if(/[?&]app=equalizacao/.test(location.search)) return true; try{ return sessionStorage.getItem('eqcdc_app')==='1'; }catch(e){ return false; } }
+const dentroDoSimuladores = standalone && !noProprioApp();
+const URL_EQ = 'https://jczanella.github.io/simuladores/CE_equalizacaocdc.html';
+if(standalone && noProprioApp()) gravarSalvo();
+marcarEstrela((standalone && noProprioApp()) || (!dentroDoSimuladores && lerSalvo()));
 
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); promptInstalar = e; });
 window.addEventListener('appinstalled', () => { gravarSalvo(); marcarEstrela(true); promptInstalar = null; });
@@ -286,7 +298,19 @@ $('modalOk').addEventListener('click', fecharModal);
 $('modalFundo').addEventListener('click', e => { if(e.target === $('modalFundo')) fecharModal(); });
 
 $('estrela').addEventListener('click', async () => {
-  if(standalone){ abrirModal('<p>O app já está salvo na tela inicial.</p>'); return; }
+  if(dentroDoSimuladores){
+    let abrir = ehAndroid
+      ? '<a href="intent://jczanella.github.io/simuladores/CE_equalizacaocdc.html#Intent;scheme=https;package=com.android.chrome;end">Abrir no Chrome</a>'
+      : '';
+    abrirModal('<p>Esta página está aberta dentro do app <b>Simuladores</b>. Para salvar só a <b>Equalização</b> na tela inicial, abra-a no navegador e toque na estrela de novo.</p>'
+      + '<div class="acoes">'+abrir+'<button type="button" class="sec" id="copiarLink">Copiar link</button></div>');
+    $('copiarLink').onclick = async () => {
+      try{ await navigator.clipboard.writeText(URL_EQ); $('copiarLink').textContent='Link copiado'; }
+      catch(e){ $('copiarLink').textContent=URL_EQ; }
+    };
+    return;
+  }
+  if(standalone){ abrirModal('<p>O app Equalização já está salvo na tela inicial.</p>'); return; }
   if(promptInstalar){
     promptInstalar.prompt();
     const r = await promptInstalar.userChoice;
@@ -299,7 +323,7 @@ $('estrela').addEventListener('click', async () => {
     gravarSalvo(); marcarEstrela(true);
     return;
   }
-  if(lerSalvo()){ abrirModal('<p>O app já está salvo na tela inicial deste aparelho.</p>'); return; }
+  if(lerSalvo()){ abrirModal('<p>O app Equalização já está salvo na tela inicial deste aparelho.</p>'); return; }
   abrirModal('<p>Abra o menu do navegador (<b>⋮</b>) e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p>');
 });
 </script>
