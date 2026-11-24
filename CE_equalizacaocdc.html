@@ -64,6 +64,8 @@ main{max-width:640px;margin:0 auto;padding:24px 16px 0;}
 .dica{font-size:.8rem;color:var(--text-soft);margin-top:14px;line-height:1.45;}
 .msg{display:none;margin-top:14px;padding:10px 14px;border-radius:8px;font-size:.85rem;font-weight:600;background:#fffbea;border:1px solid #f3d27a;color:#b45309;}
 .msg.show{display:block;}
+.aviso-car{display:none;font-size:.78rem;font-weight:600;color:#b45309;margin-top:2px;}
+.aviso-car.show{display:block;}
 
 .resumo{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .resumo div{background:#f8f9fc;border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
@@ -98,10 +100,7 @@ main{max-width:640px;margin:0 auto;padding:24px 16px 0;}
       <div class="field">
         <label for="carencia">Carência (meses)</label>
         <select id="carencia"></select>
-      </div>
-      <div class="field">
-        <label>Taxa Balcão</label>
-        <input id="taxaTabela" readonly>
+        <div class="aviso-car" id="avisoCar">A depender de aprovação do Banco CNH</div>
       </div>
       <div class="field">
         <label for="selic">Selic atual (% a.a.)</label>
@@ -175,6 +174,7 @@ function taxaParaEqualizacao(alvo, taxaTab, prazo, carencia, selicAa){
 const $ = id => document.getElementById(id);
 let modo = 'taxa';   // 'taxa' = taxa cliente digitada; 'eq' = equalização digitada
 let selic = SELIC_PADRAO;
+let taxaManual = false;   // false = taxa cliente acompanha a Taxa Balcão do prazo selecionado
 
 PRAZOS.forEach(p => $('prazo').add(new Option(p+(p===1?' mês':' meses'), p)));
 $('prazo').value = 60;
@@ -187,15 +187,16 @@ function msg(t){ $('msg').textContent=t||''; $('msg').classList.toggle('show',!!
 
 function calcular(){
   let prazo=+$('prazo').value, car=+$('carencia').value;
-  let tt=taxaTabela(), ttAa=TAXAS_A[faixa(prazo)];
-  $('taxaTabela').value = fmt(tt*100,2)+'% a.m. · '+fmt(ttAa*100,2)+'% a.a.';
+  let tt=taxaTabela();
+  $('avisoCar').classList.toggle('show', car>=2);
   $('fTaxa').classList.toggle('ativo',modo==='taxa');
   $('fEq').classList.toggle('ativo',modo==='eq');
   msg('');
 
   let tc, eq;
   if(modo==='taxa'){
-    tc = parseNum($('taxaCli').value)/100;
+    if(!taxaManual){ tc = tt; $('taxaCli').value = fmt(tt*100,2); }   // padrão: Taxa Balcão do prazo
+    else tc = parseNum($('taxaCli').value)/100;
     if(isNaN(tc)){ limpar('equal'); return; }
     eq = Math.round(equalizacao(tt,tc,prazo,car,selic)*10000)/10000;   // ROUND(...,4) da planilha
     $('equal').value = fmt(eq*100,2);
@@ -219,10 +220,11 @@ function limpar(campo){
 let ultimoEvento='';
 function registrar(){ let k=$('prazo').value+'|'+$('carencia').value+'|'+$('taxaCli').value+'|'+$('equal').value; if(k!==ultimoEvento){ ultimoEvento=k; gtag('event','simular',{simulador:document.title}); } }
 
-$('taxaCli').addEventListener('input',()=>{ filtraDec($('taxaCli')); modo='taxa'; calcular(); });
-$('equal').addEventListener('input',()=>{ filtraDec($('equal')); modo='eq'; calcular(); });
-$('taxaCli').addEventListener('blur',()=>{ let v=parseNum($('taxaCli').value); if(!isNaN(v)&&modo==='taxa') $('taxaCli').value=fmt(v,2); registrar(); });
-$('equal').addEventListener('blur',()=>{ let v=parseNum($('equal').value); if(!isNaN(v)&&modo==='eq') $('equal').value=fmt(v,2); registrar(); });
+$('taxaCli').addEventListener('input',()=>{ filtraDec($('taxaCli')); modo='taxa'; taxaManual=true; calcular(); });
+$('equal').addEventListener('input',()=>{ filtraDec($('equal')); modo='eq'; taxaManual=true; calcular(); });
+// Campo esvaziado ao sair → volta ao padrão (Taxa Balcão do prazo)
+$('taxaCli').addEventListener('blur',()=>{ let v=parseNum($('taxaCli').value); if(isNaN(v)){ modo='taxa'; taxaManual=false; calcular(); } else if(modo==='taxa') $('taxaCli').value=fmt(v,2); registrar(); });
+$('equal').addEventListener('blur',()=>{ let v=parseNum($('equal').value); if(isNaN(v)){ modo='taxa'; taxaManual=false; calcular(); } else if(modo==='eq') $('equal').value=fmt(v,2); registrar(); });
 $('prazo').addEventListener('change',()=>{ calcular(); registrar(); });
 $('carencia').addEventListener('change',()=>{ calcular(); registrar(); });
 $('selic').addEventListener('input',()=>{ filtraDec($('selic')); let v=parseNum($('selic').value); if(!isNaN(v)&&v>0){ selic=v/100; calcular(); } });
