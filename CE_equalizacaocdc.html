@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Equalização CDC CE</title>
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1b3c6b">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SF443XR798"></script>
+<script>
+window.dataLayer=window.dataLayer||[];
+function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','G-SF443XR798');
+</script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1b3c6b;
+  --blue-light:#2451a0;
+  --blue-pale:#e8eef7;
+  --bg:#f5f7fa;
+  --card:#ffffff;
+  --text:#1a1a2e;
+  --text-soft:#5a6377;
+  --border:#dde3ed;
+  --radius:14px;
+  --shadow:0 2px 8px rgba(27,60,107,.10);
+}
+body{font-family:'Inter',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:48px;}
+
+header{background:var(--blue);color:#fff;padding:20px 20px 18px;}
+.header-text h1{font-size:1.1rem;font-weight:700;letter-spacing:.2px;}
+.header-text p{font-size:.78rem;opacity:.72;margin-top:3px;}
+
+main{max-width:640px;margin:0 auto;padding:24px 16px 0;}
+
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 18px;margin-bottom:18px;}
+.card-title{font-size:.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-soft);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:.72rem;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--text-soft);}
+.field input,.field select{padding:10px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:1rem;color:var(--text);background:#fff;outline:none;transition:border-color .15s;width:100%;font-variant-numeric:tabular-nums;}
+.field input:focus,.field select:focus{border-color:var(--blue);}
+.field input[readonly]{background:#f8f9fc;color:var(--text-soft);}
+.unit{display:flex;align-items:center;gap:6px;}
+.unit span{font-size:.8rem;color:var(--text-soft);white-space:nowrap;}
+
+/* Bloco principal: taxa cliente <-> equalização */
+.calc{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end;}
+.calc .field input{font-size:1.35rem;font-weight:700;padding:12px;text-align:center;color:var(--blue);}
+.calc .field.ativo input{border-color:var(--blue);background:var(--blue-pale);}
+.seta{font-size:1.4rem;color:var(--text-soft);padding-bottom:12px;}
+.sub{font-size:.8rem;color:var(--text-soft);text-align:center;margin-top:4px;font-variant-numeric:tabular-nums;}
+.dica{font-size:.8rem;color:var(--text-soft);margin-top:14px;line-height:1.45;}
+.msg{display:none;margin-top:14px;padding:10px 14px;border-radius:8px;font-size:.85rem;font-weight:600;background:#fffbea;border:1px solid #f3d27a;color:#b45309;}
+.msg.show{display:block;}
+
+.resumo{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.resumo div{background:#f8f9fc;border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+.resumo small{display:block;font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-soft);}
+.resumo b{display:block;font-size:1rem;margin-top:3px;font-variant-numeric:tabular-nums;}
+.resumo em{font-style:normal;font-size:.78rem;color:var(--text-soft);}
+
+@media (max-width:480px){
+  .calc{grid-template-columns:1fr;}
+  .seta{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-text">
+    <h1>Equalização CDC CE</h1>
+    <p>CDC CE Mensal · Rating A · Linha CE</p>
+  </div>
+</header>
+
+<main>
+
+  <div class="card">
+    <div class="card-title">Operação</div>
+    <div class="grid2">
+      <div class="field">
+        <label for="prazo">Prazo (meses)</label>
+        <select id="prazo"></select>
+      </div>
+      <div class="field">
+        <label for="carencia">Carência (meses)</label>
+        <select id="carencia"></select>
+      </div>
+      <div class="field">
+        <label>Taxa da tabela (Rating A)</label>
+        <input id="taxaTabela" readonly>
+      </div>
+      <div class="field">
+        <label for="selic">Selic atual (% a.a.)</label>
+        <input id="selic" type="text" inputmode="decimal">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Equalização</div>
+    <div class="calc">
+      <div class="field" id="fTaxa">
+        <label for="taxaCli">Taxa cliente (% a.m.)</label>
+        <input id="taxaCli" type="text" inputmode="decimal" placeholder="0,00">
+        <div class="sub" id="taxaCliAa">&nbsp;</div>
+      </div>
+      <div class="seta">⇄</div>
+      <div class="field" id="fEq">
+        <label for="equal">Equalização (%)</label>
+        <input id="equal" type="text" inputmode="decimal" placeholder="0,00">
+        <div class="sub">sobre o valor financiado</div>
+      </div>
+    </div>
+    <div class="msg" id="msg"></div>
+    <p class="dica">Digite a <b>taxa cliente</b> para obter a equalização, ou digite a <b>equalização</b> desejada para obter a taxa cliente.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Resumo</div>
+    <div class="resumo">
+      <div><small>Taxa da tabela</small><b id="rTab">—</b><em id="rTabAa"></em></div>
+      <div><small>Taxa cliente</small><b id="rCli">—</b><em id="rCliAa"></em></div>
+      <div><small>Taxa equalizada</small><b id="rDif">—</b><em>tabela − cliente</em></div>
+      <div><small>Equalização</small><b id="rEq">—</b><em>Selic <span id="rSelic"></span></em></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── Tabela CDC CE · Rating A (taxas a.a.) — planilha "Simulador_Equalização_CDC_Selic_1375_Sep_2026"
+// Prazos aceitos pela planilha (coluna M): 1 a 18, 24, 36, 42, 48 e 60 meses.
+// 1–12 → coluna 12m; 13–24 → 24m; 36 → 36m; 42 e 48 → 48m; 60 → 60m.
+const TAXAS_A = {12:0.1998, 24:0.2016, 36:0.2030, 48:0.2038, 60:0.2051};
+const PRAZOS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,24,36,42,48,60];
+const SELIC_PADRAO = 0.1375;
+const CARENCIAS = [0,1,2,3,4,5,6];
+
+function faixa(n){ return n<=12?12 : n<=24?24 : n<=36?36 : n<=48?48 : 60; }
+function aaParaAm(aa){ return Math.pow(1+aa,1/12)-1; }
+function amParaAa(am){ return Math.pow(1+am,12)-1; }
+function parseNum(v){ v=(v||'').trim(); if(v==='') return NaN; return parseFloat(v.replace(/\./g,'').replace(',','.')); }
+function fmt(v,c){ return v.toLocaleString('pt-BR',{minimumFractionDigits:c,maximumFractionDigits:c}); }
+function fmtVar(v,min,max){ return v.toLocaleString('pt-BR',{minimumFractionDigits:min,maximumFractionDigits:max}); }
+function filtraDec(el){ let r=el.value.replace(/[^0-9,]/g,''); let p=r.split(','); if(p.length>2) r=p[0]+','+p.slice(1).join(''); if(el.value!==r) el.value=r; }
+
+// PMT / PV (equivalentes ao Excel, com valor presente positivo)
+function pmt(r,n,pv){ return r===0 ? pv/n : pv*r/(1-Math.pow(1+r,-n)); }
+function pvAnuidade(r,n,p){ return r===0 ? p*n : p*(1-Math.pow(1+r,-n))/r; }
+
+// Equalização (fração do valor financiado) — fórmulas M25, M26, M27 e M22 da planilha, sem o ROUND
+function equalizacao(taxaTab, taxaCli, prazo, carencia, selicAa){
+  let c = Math.max(carencia,1);                // carência 0 e 1 dão o mesmo resultado na planilha
+  let n = prazo - c + 1;
+  let dif = pmt(taxaTab,n,100*Math.pow(1+taxaTab,c-1)) - pmt(taxaCli,n,100*Math.pow(1+taxaCli,c-1));
+  let s = aaParaAm(selicAa);
+  let pv1 = pvAnuidade(s,n,dif);
+  let pv2 = pv1/Math.pow(1+s,c-1);
+  return pv2/100;
+}
+// Inverso: taxa cliente (a.m.) que gera a equalização desejada — bisseção (equalização cai quando a taxa sobe)
+function taxaParaEqualizacao(alvo, taxaTab, prazo, carencia, selicAa){
+  let lo=0, hi=taxaTab;
+  for(let k=0;k<200;k++){
+    let mid=(lo+hi)/2;
+    if(equalizacao(taxaTab,mid,prazo,carencia,selicAa) > alvo) lo=mid; else hi=mid;
+  }
+  return (lo+hi)/2;
+}
+
+const $ = id => document.getElementById(id);
+let modo = 'taxa';   // 'taxa' = taxa cliente digitada; 'eq' = equalização digitada
+let selic = SELIC_PADRAO;
+
+PRAZOS.forEach(p => $('prazo').add(new Option(p+(p===1?' mês':' meses'), p)));
+$('prazo').value = 60;
+CARENCIAS.forEach(c => $('carencia').add(new Option(c===0?'Sem carência':c+(c===1?' mês':' meses'), c)));
+$('selic').value = fmt(SELIC_PADRAO*100,2);
+
+function taxaTabela(){ return aaParaAm(TAXAS_A[faixa(+$('prazo').value)]); }
+
+function msg(t){ $('msg').textContent=t||''; $('msg').classList.toggle('show',!!t); }
+
+function calcular(){
+  let prazo=+$('prazo').value, car=+$('carencia').value;
+  let tt=taxaTabela(), ttAa=TAXAS_A[faixa(prazo)];
+  $('taxaTabela').value = fmt(tt*100,2)+'% a.m. · '+fmt(ttAa*100,2)+'% a.a.';
+  $('rTab').textContent = fmt(tt*100,4)+'% a.m.';
+  $('rTabAa').textContent = fmt(ttAa*100,2)+'% a.a.';
+  $('rSelic').textContent = fmt(selic*100,2)+'% a.a.';
+  $('fTaxa').classList.toggle('ativo',modo==='taxa');
+  $('fEq').classList.toggle('ativo',modo==='eq');
+  msg('');
+
+  let tc, eq;
+  if(modo==='taxa'){
+    tc = parseNum($('taxaCli').value)/100;
+    if(isNaN(tc)){ limpar('equal'); return; }
+    eq = Math.round(equalizacao(tt,tc,prazo,car,selic)*10000)/10000;   // ROUND(...,4) da planilha
+    $('equal').value = fmt(eq*100,2);
+    if(tc>tt) msg('Taxa cliente acima da taxa da tabela: não há equalização (valor negativo).');
+  } else {
+    eq = parseNum($('equal').value)/100;
+    if(isNaN(eq)){ limpar('taxaCli'); return; }
+    let max = equalizacao(tt,0,prazo,car,selic);
+    if(eq<0){ msg('Equalização não pode ser negativa.'); limpar('taxaCli'); return; }
+    if(eq>max){ msg('Equalização máxima para este prazo: '+fmt(max*100,2)+'% (taxa cliente 0%).'); limpar('taxaCli'); return; }
+    tc = taxaParaEqualizacao(eq,tt,prazo,car,selic);
+    $('taxaCli').value = fmtVar(tc*100,2,4);
+  }
+  $('taxaCliAa').textContent = fmt(amParaAa(tc)*100,2)+'% a.a.';
+  $('rCli').textContent = fmtVar(tc*100,2,4)+'% a.m.';
+  $('rCliAa').textContent = fmt(amParaAa(tc)*100,2)+'% a.a.';
+  $('rDif').textContent = fmtVar((tt-tc)*100,2,4)+'% a.m.';
+  $('rEq').textContent = fmt(eq*100,2)+'%';
+}
+function limpar(campo){
+  $(campo).value='';
+  $('taxaCliAa').innerHTML='&nbsp;';
+  ['rCli','rDif','rEq'].forEach(id=>$(id).textContent='—');
+  $('rCliAa').textContent='';
+}
+
+let ultimoEvento='';
+function registrar(){ let k=$('prazo').value+'|'+$('carencia').value+'|'+$('taxaCli').value+'|'+$('equal').value; if(k!==ultimoEvento){ ultimoEvento=k; gtag('event','simular',{simulador:document.title}); } }
+
+$('taxaCli').addEventListener('input',()=>{ filtraDec($('taxaCli')); modo='taxa'; calcular(); });
+$('equal').addEventListener('input',()=>{ filtraDec($('equal')); modo='eq'; calcular(); });
+$('taxaCli').addEventListener('blur',()=>{ let v=parseNum($('taxaCli').value); if(!isNaN(v)&&modo==='taxa') $('taxaCli').value=fmtVar(v,2,4); registrar(); });
+$('equal').addEventListener('blur',()=>{ let v=parseNum($('equal').value); if(!isNaN(v)&&modo==='eq') $('equal').value=fmt(v,2); registrar(); });
+$('prazo').addEventListener('change',()=>{ calcular(); registrar(); });
+$('carencia').addEventListener('change',()=>{ calcular(); registrar(); });
+$('selic').addEventListener('input',()=>{ filtraDec($('selic')); let v=parseNum($('selic').value); if(!isNaN(v)&&v>0){ selic=v/100; calcular(); } });
+$('selic').addEventListener('blur',()=>{ let v=parseNum($('selic').value); if(isNaN(v)||v<=0){ selic=SELIC_PADRAO; } $('selic').value=fmt(selic*100,2); calcular(); });
+
+calcular();
+</script>
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('/simuladores/sw.js');
+  });
+}
+</script>
+</body>
+</html>
