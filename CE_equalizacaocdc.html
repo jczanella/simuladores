@@ -228,6 +228,14 @@ $('carencia').addEventListener('change',()=>{ calcular(); registrar(); });
 $('selic').addEventListener('input',()=>{ filtraDec($('selic')); let v=parseNum($('selic').value); if(!isNaN(v)&&v>0){ selic=v/100; calcular(); } });
 $('selic').addEventListener('blur',()=>{ let v=parseNum($('selic').value); if(isNaN(v)||v<=0){ selic=SELIC_PADRAO; } $('selic').value=fmt(selic*100,2); calcular(); });
 
+// Ao entrar no campo, seleciona todo o conteúdo: o que for digitado substitui o número inteiro
+// (setTimeout: no celular/Safari o toque desfaz a seleção feita direto no focus)
+['taxaCli','equal','selic'].forEach(id=>{
+  const el=$(id);
+  el.addEventListener('focus',()=>{ setTimeout(()=>{ try{ el.setSelectionRange(0,el.value.length); }catch(e){ el.select(); } },0); });
+  el.addEventListener('mouseup',e=>e.preventDefault());
+});
+
 calcular();
 </script>
 
