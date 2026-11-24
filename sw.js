@@ -17,8 +17,6 @@ const ARQUIVOS = [
   '/simuladores/AG_pronamp.html',
   '/simuladores/AG_tfbdolar.html',
   '/simuladores/AG_cdcnaorural.html',
-  '/simuladores/CE_equalizacaocdc.html',
-  '/simuladores/manifest-equalizacao.json',
   '/simuladores/manifest.json',
   '/simuladores/icon-192.png',
   '/simuladores/icon-512.png',
@@ -38,7 +36,8 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+        // só caches deste app — o domínio é compartilhado com /equalizacao/
+        keys.filter(k => k.startsWith('simuladores-') && k !== CACHE).map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())
   );
