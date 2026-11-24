@@ -18,6 +18,7 @@ const ARQUIVOS = [
   '/simuladores/AG_tfbdolar.html',
   '/simuladores/AG_cdcnaorural.html',
   '/simuladores/CE_equalizacaocdc.html',
+  '/simuladores/manifest-equalizacao.json',
   '/simuladores/manifest.json',
   '/simuladores/icon-192.png',
   '/simuladores/icon-512.png',

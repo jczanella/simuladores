@@ -7,7 +7,9 @@
 <title>Equalização CDC CE</title>
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest-equalizacao.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Equalização">
 <meta name="theme-color" content="#1b3c6b">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,7 +39,21 @@ gtag('config','G-SF443XR798');
 }
 body{font-family:'Inter',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:48px;}
 
-header{background:var(--blue);color:#fff;padding:20px 20px 18px;}
+header{background:var(--blue);color:#fff;padding:20px 20px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+
+/* Estrela "salvar na tela inicial" */
+.estrela{background:none;border:none;cursor:pointer;padding:6px;margin:-6px -6px -6px 0;line-height:0;border-radius:8px;flex-shrink:0;}
+.estrela:focus-visible{outline:2px solid #fff;}
+.estrela svg{width:28px;height:28px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linejoin:round;transition:fill .2s,stroke .2s;}
+.estrela.on svg{fill:#f5c518;stroke:#f5c518;}
+
+.modal-fundo{display:none;position:fixed;inset:0;background:rgba(10,20,40,.45);z-index:50;align-items:flex-end;justify-content:center;padding:16px;}
+.modal-fundo.show{display:flex;}
+.modal{background:#fff;border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.25);padding:20px 18px;max-width:420px;width:100%;}
+.modal h2{font-size:1rem;color:var(--blue);margin-bottom:10px;}
+.modal p,.modal li{font-size:.9rem;line-height:1.5;color:var(--text);}
+.modal ol{padding-left:20px;margin:6px 0 4px;}
+.modal button{margin-top:16px;width:100%;padding:11px;border:none;border-radius:8px;background:var(--blue);color:#fff;font-family:inherit;font-size:.92rem;font-weight:600;cursor:pointer;}
 .header-text h1{font-size:1.1rem;font-weight:700;letter-spacing:.2px;}
 .header-text p{font-size:.78rem;opacity:.72;margin-top:3px;}
 
@@ -86,7 +102,18 @@ main{max-width:640px;margin:0 auto;padding:24px 16px 0;}
     <h1>Equalização CDC CE</h1>
     <p>CDC CE Mensal · Linha CE</p>
   </div>
+  <button class="estrela" id="estrela" type="button" aria-label="Salvar na tela inicial" title="Salvar na tela inicial">
+    <svg viewBox="0 0 24 24"><path d="M12 2.8l2.83 5.74 6.33.92-4.58 4.47 1.08 6.3L12 17.25l-5.66 2.98 1.08-6.3-4.58-4.47 6.33-.92z"/></svg>
+  </button>
 </header>
+
+<div class="modal-fundo" id="modalFundo">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <h2 id="modalTitulo">Salvar na tela inicial</h2>
+    <div id="modalTexto"></div>
+    <button type="button" id="modalOk">Entendi</button>
+  </div>
+</div>
 
 <main>
 
@@ -237,6 +264,44 @@ $('selic').addEventListener('blur',()=>{ let v=parseNum($('selic').value); if(is
 });
 
 calcular();
+
+// ── Estrela: salvar o app na tela inicial ──
+// Android/Chrome/Edge: usa o prompt nativo de instalação (beforeinstallprompt).
+// iPhone/iPad (Safari não tem prompt): mostra o passo a passo "Compartilhar → Adicionar à Tela de Início".
+let promptInstalar = null;
+const CHAVE_SALVO = 'eqcdc_salvo';
+function lerSalvo(){ try{ return localStorage.getItem(CHAVE_SALVO)==='1'; }catch(e){ return false; } }
+function gravarSalvo(){ try{ localStorage.setItem(CHAVE_SALVO,'1'); }catch(e){} }
+function marcarEstrela(on){ $('estrela').classList.toggle('on',on); $('estrela').setAttribute('aria-pressed',on?'true':'false'); }
+const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+const ehIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+marcarEstrela(standalone || lerSalvo());
+
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); promptInstalar = e; });
+window.addEventListener('appinstalled', () => { gravarSalvo(); marcarEstrela(true); promptInstalar = null; });
+
+function abrirModal(html){ $('modalTexto').innerHTML = html; $('modalFundo').classList.add('show'); $('modalOk').focus(); }
+function fecharModal(){ $('modalFundo').classList.remove('show'); }
+$('modalOk').addEventListener('click', fecharModal);
+$('modalFundo').addEventListener('click', e => { if(e.target === $('modalFundo')) fecharModal(); });
+
+$('estrela').addEventListener('click', async () => {
+  if(standalone){ abrirModal('<p>O app já está salvo na tela inicial.</p>'); return; }
+  if(promptInstalar){
+    promptInstalar.prompt();
+    const r = await promptInstalar.userChoice;
+    promptInstalar = null;
+    if(r && r.outcome === 'accepted'){ gravarSalvo(); marcarEstrela(true); }
+    return;
+  }
+  if(ehIOS){
+    abrirModal('<p>No iPhone/iPad:</p><ol><li>Toque no botão <b>Compartilhar</b> (quadrado com seta para cima) na barra do Safari.</li><li>Escolha <b>Adicionar à Tela de Início</b>.</li><li>Toque em <b>Adicionar</b>.</li></ol>');
+    gravarSalvo(); marcarEstrela(true);
+    return;
+  }
+  if(lerSalvo()){ abrirModal('<p>O app já está salvo na tela inicial deste aparelho.</p>'); return; }
+  abrirModal('<p>Abra o menu do navegador (<b>⋮</b>) e escolha <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</p>');
+});
 </script>
 
 <script>
