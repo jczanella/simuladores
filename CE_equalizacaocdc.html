@@ -82,7 +82,7 @@ main{max-width:640px;margin:0 auto;padding:24px 16px 0;}
 <header>
   <div class="header-text">
     <h1>Equalização CDC CE</h1>
-    <p>CDC CE Mensal · Rating A · Linha CE</p>
+    <p>CDC CE Mensal · Linha CE</p>
   </div>
 </header>
 
@@ -100,7 +100,7 @@ main{max-width:640px;margin:0 auto;padding:24px 16px 0;}
         <select id="carencia"></select>
       </div>
       <div class="field">
-        <label>Taxa da tabela (Rating A)</label>
+        <label>Taxa Balcão</label>
         <input id="taxaTabela" readonly>
       </div>
       <div class="field">
@@ -127,16 +127,6 @@ main{max-width:640px;margin:0 auto;padding:24px 16px 0;}
     </div>
     <div class="msg" id="msg"></div>
     <p class="dica">Digite a <b>taxa cliente</b> para obter a equalização, ou digite a <b>equalização</b> desejada para obter a taxa cliente.</p>
-  </div>
-
-  <div class="card">
-    <div class="card-title">Resumo</div>
-    <div class="resumo">
-      <div><small>Taxa da tabela</small><b id="rTab">—</b><em id="rTabAa"></em></div>
-      <div><small>Taxa cliente</small><b id="rCli">—</b><em id="rCliAa"></em></div>
-      <div><small>Taxa equalizada</small><b id="rDif">—</b><em>tabela − cliente</em></div>
-      <div><small>Equalização</small><b id="rEq">—</b><em>Selic <span id="rSelic"></span></em></div>
-    </div>
   </div>
 
 </main>
@@ -199,9 +189,6 @@ function calcular(){
   let prazo=+$('prazo').value, car=+$('carencia').value;
   let tt=taxaTabela(), ttAa=TAXAS_A[faixa(prazo)];
   $('taxaTabela').value = fmt(tt*100,2)+'% a.m. · '+fmt(ttAa*100,2)+'% a.a.';
-  $('rTab').textContent = fmt(tt*100,4)+'% a.m.';
-  $('rTabAa').textContent = fmt(ttAa*100,2)+'% a.a.';
-  $('rSelic').textContent = fmt(selic*100,2)+'% a.a.';
   $('fTaxa').classList.toggle('ativo',modo==='taxa');
   $('fEq').classList.toggle('ativo',modo==='eq');
   msg('');
@@ -212,7 +199,7 @@ function calcular(){
     if(isNaN(tc)){ limpar('equal'); return; }
     eq = Math.round(equalizacao(tt,tc,prazo,car,selic)*10000)/10000;   // ROUND(...,4) da planilha
     $('equal').value = fmt(eq*100,2);
-    if(tc>tt) msg('Taxa cliente acima da taxa da tabela: não há equalização (valor negativo).');
+    if(tc>tt) msg('Taxa cliente acima da Taxa Balcão: não há equalização (valor negativo).');
   } else {
     eq = parseNum($('equal').value)/100;
     if(isNaN(eq)){ limpar('taxaCli'); return; }
@@ -220,19 +207,13 @@ function calcular(){
     if(eq<0){ msg('Equalização não pode ser negativa.'); limpar('taxaCli'); return; }
     if(eq>max){ msg('Equalização máxima para este prazo: '+fmt(max*100,2)+'% (taxa cliente 0%).'); limpar('taxaCli'); return; }
     tc = taxaParaEqualizacao(eq,tt,prazo,car,selic);
-    $('taxaCli').value = fmtVar(tc*100,2,4);
+    $('taxaCli').value = fmt(tc*100,2);   // exibe 2 casas (arredondamento só visual)
   }
   $('taxaCliAa').textContent = fmt(amParaAa(tc)*100,2)+'% a.a.';
-  $('rCli').textContent = fmtVar(tc*100,2,4)+'% a.m.';
-  $('rCliAa').textContent = fmt(amParaAa(tc)*100,2)+'% a.a.';
-  $('rDif').textContent = fmtVar((tt-tc)*100,2,4)+'% a.m.';
-  $('rEq').textContent = fmt(eq*100,2)+'%';
 }
 function limpar(campo){
   $(campo).value='';
   $('taxaCliAa').innerHTML='&nbsp;';
-  ['rCli','rDif','rEq'].forEach(id=>$(id).textContent='—');
-  $('rCliAa').textContent='';
 }
 
 let ultimoEvento='';
@@ -240,7 +221,7 @@ function registrar(){ let k=$('prazo').value+'|'+$('carencia').value+'|'+$('taxa
 
 $('taxaCli').addEventListener('input',()=>{ filtraDec($('taxaCli')); modo='taxa'; calcular(); });
 $('equal').addEventListener('input',()=>{ filtraDec($('equal')); modo='eq'; calcular(); });
-$('taxaCli').addEventListener('blur',()=>{ let v=parseNum($('taxaCli').value); if(!isNaN(v)&&modo==='taxa') $('taxaCli').value=fmtVar(v,2,4); registrar(); });
+$('taxaCli').addEventListener('blur',()=>{ let v=parseNum($('taxaCli').value); if(!isNaN(v)&&modo==='taxa') $('taxaCli').value=fmt(v,2); registrar(); });
 $('equal').addEventListener('blur',()=>{ let v=parseNum($('equal').value); if(!isNaN(v)&&modo==='eq') $('equal').value=fmt(v,2); registrar(); });
 $('prazo').addEventListener('change',()=>{ calcular(); registrar(); });
 $('carencia').addEventListener('change',()=>{ calcular(); registrar(); });
