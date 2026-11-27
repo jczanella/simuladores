@@ -664,7 +664,11 @@ function gerarPDF(){
   doc.setFont("helvetica","normal");doc.setFontSize(6.5);doc.setTextColor(180,200,230);
   doc.text(`Simulado em ${now.toLocaleDateString("pt-BR")} às ${now.toTimeString().slice(0,5)}`,W-10,5.2,{align:"right"});
 
-  let y=13;
+  // Aviso de condições provisórias (pedido do usuário, 27/11/2026) — retirar quando o fabricante divulgar as condições
+  doc.setFontSize(7.5);doc.setFont("helvetica","bold");doc.setTextColor(180,110,0);
+  doc.text("Condições provisórias aguardando divulgação das condições pelo fabricante",W/2,13,{align:"center"});
+
+  let y=16;
   doc.setFillColor(248,249,252);doc.setDrawColor(221,227,237);
   doc.roundedRect(10,y,W-20,42,2,2,"FD");
   doc.setFontSize(6.2);doc.setFont("helvetica","bold");doc.setTextColor(...GRAY);
