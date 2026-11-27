@@ -313,7 +313,7 @@ function mask(el){
 // Campanha CDC TT Importados (pedido do usuário, 27/11/2026). Sem DI na base.
 const TAXA_AA=0.05;       // 5% a.a. fixa
 const ENTRADA_MIN=20;     // entrada mínima 20%
-const PRAZOS=[12,24,36,48,60];
+const PRAZOS=[12,24];     // prazo máximo 24 meses (usuário, 27/11/2026)
 const TAC=0;              // financiamentos agrícolas sem TAC (usuário, 01/10/2026)
 // Flat total da campanha (dealer, categoria Exclusive, "Flat com desconto do BCNH"),
 // por periodicidade (meses do período) e prazo (meses). Incide sobre o valor financiado.
@@ -338,7 +338,7 @@ function atualizarPrazos(){
     let n=m/per;
     selectPrazo.add(new Option(`${m} meses (${n} ${nomePeriodo(per,n)})`,m));
   });
-  selectPrazo.value=atual||60;
+  selectPrazo.value=atual||24;
 }
 
 // ========= DATAS =========
